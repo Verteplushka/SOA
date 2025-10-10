@@ -1,0 +1,514 @@
+openapi: 3.0.0
+info:
+  title: City Management API
+  version: 1.0.0
+  description: RESTful API для управления коллекцией городов
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер разработки
+
+paths:
+  /cities/search:
+    post:
+      summary: Получить массив городов с поддержкой сортировки, фильтрации и постраничного вывода
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/CitySearchRequest"
+      responses:
+        "200":
+          description: Успешный возврат массива городов
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/City"
+                xml:
+                  name: cities
+        "400":
+          description: Неверные параметры запроса
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /cities:
+    post:
+      summary: Добавить новый город
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/CityInput"
+      responses:
+        "201":
+          description: Город успешно создан
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/City"
+        "400":
+          description: Неверные данные города
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "409":
+          description: Конфликт (например, неуникальный ID)
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ConflictError"
+
+  /cities/{id}:
+    get:
+      summary: Получить город по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Город найден
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/City"
+        "404":
+          description: Город не найден
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+
+    put:
+      summary: Обновить город по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/CityInput"
+      responses:
+        "200":
+          description: Город успешно обновлен
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/City"
+        "400":
+          description: Неверные данные города
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "404":
+          description: Город не найден
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+
+    delete:
+      summary: Удалить город по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "204":
+          description: Город успешно удален
+        "404":
+          description: Город не найден
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+
+  /cities/by-meters-above-sea-level:
+    delete:
+      summary: Удалить один город по значению metersAboveSeaLevel
+      parameters:
+        - name: meters
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Город успешно удален
+        "404":
+          description: Город с указанным значением не найден
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+              example:
+                error: NOT_FOUND
+                message: "Город с параметром metersAboveSeaLevel = 2389 не найден"
+                timestamp: "2025-10-10T18:33:09.322Z"
+
+  /cities/by-name-prefix:
+    get:
+      summary: Получить города, имя которых начинается с заданной подстроки
+      parameters:
+        - name: prefix
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        "200":
+          description: Успешный возврат массива городов
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/City"
+                xml:
+                  name: cities
+        "400":
+          description: Неверный параметр prefix
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+              example:
+                error: BAD_REQUEST
+                message: "Подстрока не должна быть пустой"
+                timestamp: "2025-10-10T18:33:09.322Z"
+
+  /cities/by-governor-age:
+    get:
+      summary: Получить города, где возраст губернатора больше заданного
+      parameters:
+        - name: age
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Успешный возврат массива городов
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/City"
+                xml:
+                  name: cities
+        "400":
+          description: Неверный параметр age
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+              example:
+                error: BAD_REQUEST
+                message: "Параметр age должен быть больше 0"
+                timestamp: "2025-10-10T18:33:09.322Z"
+
+components:
+  schemas:
+    CitySearchRequest:
+      type: object
+      properties:
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+        sort:
+          type: array
+          items:
+            $ref: "#/components/schemas/SortOption"
+        filter:
+          $ref: "#/components/schemas/CityFilter"
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 0
+          default: 0
+        size:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+
+    SortOption:
+      type: object
+      properties:
+        field:
+          type: string
+          enum:
+            - ID
+            - NAME
+            - AREA
+            - POPULATION
+            - METERS_ABOVE_SEA_LEVEL
+            - POPULATION_DENSITY
+            - CREATION_DATE
+            - ESTABLISHMENT_DATE
+        direction:
+          type: string
+          enum:
+            - ASC
+            - DESC
+      required:
+        - field
+        - direction
+
+    CityFilter:
+      type: object
+      properties:
+        name:
+          type: string
+        coordinates:
+          $ref: "#/components/schemas/CoordinatesFilter"
+        creationDate:
+          $ref: "#/components/schemas/DateRangeFilter"
+        area:
+          $ref: "#/components/schemas/NumberRangeFilter"
+        population:
+          $ref: "#/components/schemas/NumberRangeFilter"
+        metersAboveSeaLevel:
+          $ref: "#/components/schemas/NumberRangeFilter"
+        establishmentDate:
+          $ref: "#/components/schemas/DateTimeRangeFilter"
+        populationDensity:
+          $ref: "#/components/schemas/NumberRangeFilter"
+        government:
+          $ref: "#/components/schemas/Government"
+        governor:
+          $ref: "#/components/schemas/HumanFilter"
+
+    CoordinatesFilter:
+      type: object
+      properties:
+        x:
+          $ref: "#/components/schemas/NumberRangeFilter"
+        y:
+          $ref: "#/components/schemas/NumberRangeFilter"
+
+    HumanFilter:
+      type: object
+      properties:
+        age:
+          $ref: "#/components/schemas/NumberRangeFilter"
+
+    DateRangeFilter:
+      type: object
+      properties:
+        min:
+          type: string
+          format: date
+        max:
+          type: string
+          format: date
+
+    DateTimeRangeFilter:
+      type: object
+      properties:
+        min:
+          type: string
+          format: date-time
+        max:
+          type: string
+          format: date-time
+
+    NumberRangeFilter:
+      type: object
+      properties:
+        min:
+          type: number
+        max:
+          type: number
+    City:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          readOnly: true
+        name:
+          type: string
+          minLength: 1
+        coordinates:
+          $ref: "#/components/schemas/Coordinates"
+        creationDate:
+          type: string
+          format: date-time
+          readOnly: true
+        area:
+          type: integer
+          minimum: 1
+        population:
+          type: integer
+          minimum: 1
+        metersAboveSeaLevel:
+          type: integer
+        establishmentDate:
+          type: string
+          format: date-time
+        populationDensity:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        government:
+          $ref: "#/components/schemas/Government"
+        governor:
+          $ref: "#/components/schemas/Human"
+      required:
+        - name
+        - coordinates
+        - area
+        - population
+        - government
+        - governor
+
+    CityInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        coordinates:
+          $ref: "#/components/schemas/Coordinates"
+        area:
+          type: integer
+          minimum: 1
+        population:
+          type: integer
+          minimum: 1
+        metersAboveSeaLevel:
+          type: integer
+        establishmentDate:
+          type: string
+          format: date-time
+        populationDensity:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        government:
+          $ref: "#/components/schemas/Government"
+        governor:
+          $ref: "#/components/schemas/Human"
+      required:
+        - name
+        - coordinates
+        - area
+        - population
+        - government
+        - governor
+
+    Coordinates:
+      type: object
+      properties:
+        x:
+          type: integer
+          maximum: 220
+        y:
+          type: number
+          format: float
+      required:
+        - x
+        - y
+
+    Human:
+      type: object
+      properties:
+        age:
+          type: integer
+          minimum: 1
+      required:
+        - age
+
+    Government:
+      type: string
+      enum:
+        - DIARCHY
+        - KRITARCHY
+        - REPUBLIC
+
+    BaseError:
+      type: object
+      xml:
+        name: error
+      properties:
+        error:
+          type: string
+          description: Краткое название ошибки (например, BAD_REQUEST, NOT_FOUND)
+        message:
+          type: string
+          description: Детальное описание причины ошибки
+        timestamp:
+          type: string
+          format: date-time
+          description: Время возникновения ошибки в формате ISO 8601
+      required:
+        - error
+        - message
+        - timestamp
+      example:
+        error: INTERNAL_SERVER_ERROR
+        message: "Произошла непредвиденная ошибка на сервере"
+        timestamp: "2025-10-10T18:33:09.322Z"
+
+    ValidationError:
+      allOf:
+        - $ref: "#/components/schemas/BaseError"
+        - type: object
+          example:
+            error: BAD_REQUEST
+            message: "Некорректные параметры запроса: параметр area должен быть больше 0"
+            timestamp: "2025-10-10T18:33:09.322Z"
+
+    NotFoundError:
+      allOf:
+        - $ref: "#/components/schemas/BaseError"
+        - type: object
+          example:
+            error: NOT_FOUND
+            message: "Город с ID 123 не найден"
+            timestamp: "2025-10-10T18:33:09.322Z"
+
+    ConflictError:
+      allOf:
+        - $ref: "#/components/schemas/BaseError"
+        - type: object
+          example:
+            error: CONFLICT
+            message: "Город с таким именем уже существует"
+            timestamp: "2025-10-10T18:33:09.322Z"
+
+    ServerError:
+      allOf:
+        - $ref: "#/components/schemas/BaseError"
+        - type: object
+          example:
+            error: INTERNAL_SERVER_ERROR
+            message: "Произошла ошибка при обработке запроса"
+            timestamp: "2025-10-10T18:33:09.322Z"
