@@ -228,9 +228,106 @@ paths:
                 error: BAD_REQUEST
                 message: "Параметр age должен быть больше 0"
                 timestamp: "2025-10-10T18:33:09.322Z"
+  /genocide/count/{id1}/{id2}/{id3}:
+    get:
+      summary: Рассчитать суммарное население трёх городов
+      description: Возвращает общее количество жителей в трёх городах, указанных по их идентификаторам (id1, id2, id3).Каждый из идентификаторов должен существовать в коллекции городов.
+      parameters:
+        - name: id1
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - name: id2
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - name: id3
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Суммарное население трёх городов успешно рассчитано
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/PopulationResponse"
+        "404":
+          description: Один или несколько городов не найдены
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+        "400":
+          description: Неверные параметры ID
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ValidationIdError"
+        "500":
+          description: Ошибка при обращении к сервису городов
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ServerError"
+
+  /genocide/move-to-poorest/{id}:
+    post:
+      summary: Переселить всё население города с данным ID в город с наименьшим уровнем жизни
+      description: Выполняет переселение всех жителей из города, указанного по ID, в город, имеющий наименьший уровень жизни (например, с минимальной плотностью населения).Возвращает информацию об обновлённых городах.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Переселение выполнено успешно
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/RelocationResponse"
+        "404":
+          description: Город с указанным ID не найден
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+        "500":
+          description: Ошибка при обращении к сервису городов
+          content:
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ServerError"
+
 
 components:
   schemas:
+    RelocationResponse:
+      type: object
+      xml:
+        name: relocationResult
+      properties:
+        sourceCity:
+          $ref: "#/components/schemas/City"
+        targetCity:
+          $ref: "#/components/schemas/City"
+    PopulationResponse:
+      type: object
+      xml:
+        name: population
+      properties:
+        totalPopulation:
+          type: integer
+          example: 3450000
     CitySearchRequest:
       type: object
       properties:
@@ -484,6 +581,14 @@ components:
           example:
             error: BAD_REQUEST
             message: "Некорректные параметры запроса: параметр area должен быть больше 0"
+            timestamp: "2025-10-10T18:33:09.322Z"
+    ValidationIdError:
+      allOf:
+        - $ref: "#/components/schemas/BaseError"
+        - type: object
+          example:
+            error: BAD_REQUEST
+            message: "Некорректные параметры запроса: неверный ID"
             timestamp: "2025-10-10T18:33:09.322Z"
 
     NotFoundError:
