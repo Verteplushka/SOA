@@ -25,9 +25,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/City"
+                  allOf:
+                    - $ref: "#/components/schemas/City"
+                  xml:
+                    name: city
                 xml:
                   name: cities
+                  wrapped: true
         "400":
           description: Неверные параметры запроса
           content:
