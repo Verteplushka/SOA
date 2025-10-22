@@ -229,7 +229,7 @@ paths:
                 message: "Параметр age должен быть больше 0"
                 timestamp: "2025-10-10T18:33:09.322Z"
   /genocide/count/{id1}/{id2}/{id3}:
-    get:
+    post:
       summary: Рассчитать суммарное население трёх городов
       description: Возвращает общее количество жителей в трёх городах, указанных по их идентификаторам (id1, id2, id3).Каждый из идентификаторов должен существовать в коллекции городов.
       parameters:
@@ -307,7 +307,6 @@ paths:
             application/xml:
               schema:
                 $ref: "#/components/schemas/ServerError"
-
 
 components:
   schemas:
