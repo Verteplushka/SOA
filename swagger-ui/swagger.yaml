@@ -19,19 +19,11 @@ paths:
               $ref: "#/components/schemas/CitySearchRequest"
       responses:
         "200":
-          description: Успешный возврат массива городов
+          description: Успешный возврат страницы городов
           content:
             application/xml:
               schema:
-                type: array
-                items:
-                  allOf:
-                    - $ref: "#/components/schemas/City"
-                  xml:
-                    name: city
-                xml:
-                  name: cities
-                  wrapped: true
+                $ref: "#/components/schemas/CityPageResponse"
         "400":
           description: Неверные параметры запроса
           content:
@@ -314,6 +306,39 @@ paths:
 
 components:
   schemas:
+    CityPageResponse:
+      type: object
+      xml:
+        name: cityPageResponse
+      properties:
+        pagination:
+          type: object
+          xml:
+            name: pagination
+          properties:
+            currentPage:
+              type: integer
+              example: 1
+            totalPages:
+              type: integer
+              example: 1
+            pageSize:
+              type: integer
+              example: 20
+        cities:
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/City"
+            xml:
+              name: city
+          xml:
+            name: cities
+            wrapped: true
+      required:
+        - pagination
+        - cities
+
     RelocationResponse:
       type: object
       xml:
