@@ -97,7 +97,6 @@ function CityForm() {
       }
       navigate("/");
     } catch (err) {
-      // сервер возвращает XML с ошибкой
       if (err.response && err.response.data) {
         try {
           const xmlData = parser.parse(err.response.data);

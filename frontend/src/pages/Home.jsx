@@ -10,15 +10,22 @@ export default function Home() {
   const navigate = useNavigate();
 
   const fetchCities = async () => {
+    const requestBody = {
+      pagination: { page: 0, size: 100 },
+      sort: [],
+      filter: filters,
+    };
+
     try {
-      const res = await searchCities({
-        pagination: { page: 0, size: 100 },
-        sort: [],
-        filter: filters,
-      });
-      setCities(res?.CityPageResponse?.cities?.city || []);
+      const res = await searchCities(requestBody);
+
+      const cityData = res?.cityPageResponse?.cities?.cities || [];
+      const cityArray = Array.isArray(cityData) ? cityData : [cityData];
+
+      setCities(cityArray);
     } catch (e) {
-      console.error(e);
+      console.error("Ошибка при получении городов:", e);
+      alert("Ошибка при получении городов");
     }
   };
 
@@ -28,8 +35,12 @@ export default function Home() {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Удалить этот город?")) return;
-    await deleteCity(id);
-    fetchCities();
+    try {
+      await deleteCity(id);
+      fetchCities();
+    } catch (err) {
+      alert("Ошибка при удалении города");
+    }
   };
 
   const handleEdit = (id) => {
@@ -37,10 +48,11 @@ export default function Home() {
   };
 
   return (
-    <div>
+    <div className="container mt-4">
+      <h2>Список городов</h2>
       <Filters filters={filters} setFilters={setFilters} />
-      <table border={1} cellPadding={5}>
-        <thead>
+      <table className="table table-bordered table-striped mt-3">
+        <thead className="table-dark">
           <tr>
             <th>ID</th>
             <th>Name</th>
@@ -52,14 +64,22 @@ export default function Home() {
           </tr>
         </thead>
         <tbody>
-          {cities.map((city) => (
-            <CityRow
-              key={city.id}
-              city={city}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-            />
-          ))}
+          {cities.length === 0 ? (
+            <tr>
+              <td colSpan={7} className="text-center">
+                Нет городов
+              </td>
+            </tr>
+          ) : (
+            cities.map((city) => (
+              <CityRow
+                key={city.id}
+                city={city}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+              />
+            ))
+          )}
         </tbody>
       </table>
     </div>
