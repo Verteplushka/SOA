@@ -29,7 +29,7 @@ public class CityController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getCityById(@PathVariable int id) {
+    public ResponseEntity<?> getCityById(@PathVariable("id") int id) {
         return cityService.findById(id)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
