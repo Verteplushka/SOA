@@ -36,16 +36,8 @@ public class CityController {
 
     @PostMapping(consumes = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<?> createCity(@Valid @RequestBody CityInput input) {
-        try {
-            City saved = cityService.createCity(input);
-            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-        } catch (CityAlreadyExistsException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ErrorResponse("CONFLICT", e.getMessage(), ZonedDateTime.now()));
-        } catch (InvalidCityDataException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse("BAD_REQUEST", e.getMessage(), ZonedDateTime.now()));
-        }
+        City saved = cityService.createCity(input);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_XML_VALUE)
