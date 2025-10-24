@@ -138,6 +138,9 @@ public class CityService {
         cityRepository.delete(cityList.get(0));
     }
 
+    public List<City> findByNamePrefix(String prefix) {
+        return cityRepository.findByNameStartingWith(prefix);
+    }
 
     private void validateCityInput(CityInput input) {
         if (input.getName() == null || input.getName().trim().isEmpty()) {
