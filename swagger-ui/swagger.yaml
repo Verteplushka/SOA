@@ -212,8 +212,11 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/City"
+                  xml:
+                    name: city
                 xml:
                   name: cities
+                  wrapped: true
         "400":
           description: Неверный параметр age
           content:
