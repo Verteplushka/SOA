@@ -131,15 +131,25 @@ public class CityService {
     }
 
     public void deleteByMetersAboveSeaLevel(int meters) {
-        List<City> cityList= cityRepository.findByMetersAboveSeaLevel(meters);
-        if(cityList.isEmpty()) {
+        List<City> cityList = cityRepository.findByMetersAboveSeaLevel(meters);
+        if (cityList.isEmpty()) {
             throw new CityNotFoundException("metersAboveSeaLevel", meters);
         }
         cityRepository.delete(cityList.get(0));
     }
 
     public List<City> findByNamePrefix(String prefix) {
+        if (prefix == null || prefix.isEmpty()) {
+            throw new IllegalArgumentException("Параметр prefix не должен быть пустой");
+        }
         return cityRepository.findByNameStartingWith(prefix);
+    }
+
+    public List<City> getCitiesByGovernorAge(int age) {
+        if (age <= 0) {
+            throw new IllegalArgumentException("Параметр age должен быть больше 0");
+        }
+        return cityRepository.findByGovernorAgeGreaterThan(age);
     }
 
     private void validateCityInput(CityInput input) {

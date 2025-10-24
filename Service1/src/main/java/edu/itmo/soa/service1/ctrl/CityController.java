@@ -70,12 +70,13 @@ public class CityController {
 
     @GetMapping("/by-name-prefix")
     public ResponseEntity<?> getCitiesByNamePrefix(@RequestParam("prefix") String prefix) {
-        if (prefix == null || prefix.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse("BAD_REQUEST", "Подстрока не должна быть пустой", ZonedDateTime.now()));
-        }
-
         List<City> cities = cityService.findByNamePrefix(prefix);
+        return ResponseEntity.ok(cities);
+    }
+
+    @GetMapping("/by-governor-age")
+    public ResponseEntity<?> getCitiesByGovernorAge(@RequestParam("age") int age) {
+        List<City> cities = cityService.getCitiesByGovernorAge(age);
         return ResponseEntity.ok(cities);
     }
 

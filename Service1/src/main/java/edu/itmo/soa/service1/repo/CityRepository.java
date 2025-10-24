@@ -12,5 +12,6 @@ public interface CityRepository extends JpaRepository<City, Integer> {
     boolean existsByName(String name);
     List<City> findByMetersAboveSeaLevel(Integer metersAboveSeaLevel);
     List<City> findByNameStartingWith(String prefix);
+    List<City> findByGovernorAgeGreaterThan(int age);
 }
 
