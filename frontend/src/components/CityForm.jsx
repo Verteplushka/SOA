@@ -1,149 +1,269 @@
-import React, { useState } from "react";
-import { addCity } from "../api/citiesApi";
-import ErrorBox from "./ErrorBox";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { addCity, getCity, updateCity } from "../api";
+import { XMLParser } from "fast-xml-parser";
 
-const emptyInput = {
-  name: "",
-  coordinates: { x: 0, y: 0 },
-  area: 1,
-  population: 1,
-  metersAboveSeaLevel: 0,
-  establishmentDate: new Date().toISOString(),
-  populationDensity: 1.0,
-  government: "REPUBLIC",
-  governor: { age: 30 },
-};
+const governmentOptions = ["DIARCHY", "KRITARCHY", "REPUBLIC"];
+const parser = new XMLParser({ ignoreAttributes: false });
 
-export default function CityForm() {
-  const [model, setModel] = useState(emptyInput);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+function CityForm() {
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  function update(path, value) {
-    const copy = JSON.parse(JSON.stringify(model));
-    const parts = path.split(".");
-    let cur = copy;
-    for (let i = 0; i < parts.length - 1; i++) cur = cur[parts[i]];
-    cur[parts[parts.length - 1]] = value;
-    setModel(copy);
-  }
+  const [city, setCity] = useState({
+    name: "",
+    coordinates: { x: "0", y: "0" },
+    area: "0",
+    population: "0",
+    metersAboveSeaLevel: "0",
+    establishmentDate: "",
+    populationDensity: "0",
+    government: governmentOptions[0],
+    governor: { age: "0" },
+  });
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-    try {
-      const payload = { ...model };
-      const resp = await addCity(payload);
-      setSuccess("Город добавлен");
-      setModel(emptyInput);
-    } catch (err) {
-      console.error(err);
-      const msg = err?.response?.data || err.message;
-      setError({ message: msg });
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (id) {
+      getCity(id)
+        .then((res) => {
+          const data = res.City;
+          setCity({
+            name: data.name,
+            coordinates: {
+              x: Number(data.coordinates.x),
+              y: Number(data.coordinates.y),
+            },
+            area: Number(data.area),
+            population: Number(data.population),
+            metersAboveSeaLevel: Number(data.metersAboveSeaLevel || 0),
+            establishmentDate: data.establishmentDate
+              ? data.establishmentDate.slice(0, 10)
+              : "",
+            populationDensity: Number(data.populationDensity || 0),
+            government: data.government,
+            governor: { age: Number(data.governor.age || 0) },
+          });
+        })
+        .catch(() => setError("Не удалось загрузить данные города"));
     }
-  }
+  }, [id]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name.includes("coordinates.")) {
+      const key = name.split(".")[1];
+      setCity((prev) => ({
+        ...prev,
+        coordinates: { ...prev.coordinates, [key]: value },
+      }));
+    } else if (name.includes("governor.")) {
+      const key = name.split(".")[1];
+      setCity((prev) => ({
+        ...prev,
+        governor: { ...prev.governor, [key]: value },
+      }));
+    } else {
+      setCity((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    const cityToSend = {
+      ...city,
+      coordinates: {
+        x: Number(city.coordinates.x),
+        y: Number(city.coordinates.y),
+      },
+      area: Number(city.area),
+      population: Number(city.population),
+      metersAboveSeaLevel: Number(city.metersAboveSeaLevel),
+      populationDensity: Number(city.populationDensity),
+      governor: { age: Number(city.governor.age) },
+      establishmentDate: city.establishmentDate
+        ? city.establishmentDate + "T00:00:00"
+        : null,
+    };
+
+    try {
+      if (id) {
+        await updateCity(id, cityToSend);
+      } else {
+        await addCity(cityToSend);
+      }
+      navigate("/");
+    } catch (err) {
+      // сервер возвращает XML с ошибкой
+      if (err.response && err.response.data) {
+        try {
+          const xmlData = parser.parse(err.response.data);
+          const message = xmlData.error?.message || "Неизвестная ошибка";
+          setError(message);
+        } catch (parseErr) {
+          setError("Ошибка при разборе ответа сервера");
+        }
+      } else {
+        setError(err.message || "Ошибка при сохранении города");
+      }
+    }
+  };
 
   return (
-    <div className="card">
-      <h3>Добавить город</h3>
-      <ErrorBox error={error} />
-      {success && (
-        <div
-          style={{
-            background: "#efe",
-            padding: 8,
-            borderRadius: 6,
-            marginBottom: 8,
-          }}
-        >
-          {success}
+    <div className="container mt-4">
+      <h2 className="mb-4">{id ? "Редактировать город" : "Создать город"}</h2>
+
+      {error && (
+        <div className="alert alert-danger" role="alert">
+          {error}
         </div>
       )}
+
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>
-            Название
-            <br />
+        <div className="row g-3">
+          <div className="col-md-6">
+            <label className="form-label">Название города</label>
             <input
-              value={model.name}
-              onChange={(e) => update("name", e.target.value)}
+              type="text"
+              className="form-control"
+              name="name"
+              value={city.name}
+              onChange={handleChange}
               required
             />
-          </label>
-        </div>
-        <div>
-          <label>
-            Coordinates.x
-            <br />
-            <input
-              type="number"
-              value={model.coordinates.x}
-              onChange={(e) =>
-                update("coordinates.x", Number(e.target.value) || 0)
-              }
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Coordinates.y
-            <br />
+          </div>
+
+          <div className="col-md-3">
+            <label className="form-label">Координата X</label>
             <input
               type="number"
-              value={model.coordinates.y}
-              onChange={(e) =>
-                update("coordinates.y", Number(e.target.value) || 0)
-              }
+              className="form-control"
+              name="coordinates.x"
+              value={city.coordinates.x}
+              onChange={handleChange}
               required
             />
-          </label>
-        </div>
-        <div>
-          <label>
-            Area
-            <br />
+          </div>
+
+          <div className="col-md-3">
+            <label className="form-label">Координата Y</label>
             <input
               type="number"
-              value={model.area}
-              onChange={(e) => update("area", Number(e.target.value) || 1)}
+              step="0.01"
+              className="form-control"
+              name="coordinates.y"
+              value={city.coordinates.y}
+              onChange={handleChange}
               required
             />
-          </label>
-        </div>
-        <div>
-          <label>
-            Population
-            <br />
+          </div>
+
+          <div className="col-md-4">
+            <label className="form-label">Площадь</label>
             <input
               type="number"
-              value={model.population}
-              onChange={(e) =>
-                update("population", Number(e.target.value) || 1)
-              }
+              className="form-control"
+              name="area"
+              value={city.area}
+              onChange={handleChange}
               required
             />
-          </label>
-        </div>
-        <div>
-          <label>
-            Governor age
-            <br />
+          </div>
+
+          <div className="col-md-4">
+            <label className="form-label">Население</label>
             <input
               type="number"
-              value={model.governor.age}
-              onChange={(e) =>
-                update("governor.age", Number(e.target.value) || 1)
-              }
+              className="form-control"
+              name="population"
+              value={city.population}
+              onChange={handleChange}
               required
             />
-          </label>
+          </div>
+
+          <div className="col-md-4">
+            <label className="form-label">Высота над уровнем моря</label>
+            <input
+              type="number"
+              className="form-control"
+              name="metersAboveSeaLevel"
+              value={city.metersAboveSeaLevel}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="col-md-4">
+            <label className="form-label">Дата основания</label>
+            <input
+              type="date"
+              className="form-control"
+              name="establishmentDate"
+              value={city.establishmentDate}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="col-md-4">
+            <label className="form-label">Плотность населения</label>
+            <input
+              type="number"
+              step="0.01"
+              className="form-control"
+              name="populationDensity"
+              value={city.populationDensity}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="col-md-4">
+            <label className="form-label">Форма правления</label>
+            <select
+              className="form-select"
+              name="government"
+              value={city.government}
+              onChange={handleChange}
+              required
+            >
+              {governmentOptions.map((gov) => (
+                <option key={gov} value={gov}>
+                  {gov}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-md-4">
+            <label className="form-label">Возраст губернатора</label>
+            <input
+              type="number"
+              className="form-control"
+              name="governor.age"
+              value={city.governor.age}
+              onChange={handleChange}
+              required
+            />
+          </div>
         </div>
-        <div style={{ marginTop: 8 }}>
-          <button type="submit">Создать</button>
+
+        <div className="mt-4">
+          <button type="submit" className="btn btn-primary me-2">
+            {id ? "Сохранить" : "Создать"}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => navigate("/")}
+          >
+            Отмена
+          </button>
         </div>
       </form>
     </div>
   );
 }
+
+export default CityForm;

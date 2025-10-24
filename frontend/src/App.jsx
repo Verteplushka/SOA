@@ -1,36 +1,24 @@
-import React from 'react'
-import CityList from './components/CityList'
-import CityForm from './components/CityForm'
-import GenocideActions from './components/GenocideActions'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Header from "./components/Header";
+import Home from "./pages/Home";
+import CreateCity from "./pages/CreateCity";
+import EditCity from "./pages/EditCity";
+import Genocide from "./components/Genocide";
+import SpecialQueries from "./components/SpecialQueries";
 
-
-function App() {
-return (
-<div className="app-container">
-<header>
-<h1>City Management — Frontend</h1>
-<p>Интерфейс для работы с API городов (XML).</p>
-</header>
-
-
-<main>
-<section className="left">
-<CityForm />
-<GenocideActions />
-</section>
-<section className="right">
-<CityList />
-</section>
-</main>
-
-
-<footer>
-<small>Frontend for Lab — expects XML API as in specification.</small>
-</footer>
-</div>
-)
+export default function App() {
+  return (
+    <Router>
+      <Header />
+      <main style={{ padding: "1rem" }}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/create" element={<CreateCity />} />
+          <Route path="/edit/:id" element={<EditCity />} />
+          <Route path="/genocide" element={<Genocide />} />
+          <Route path="/special" element={<SpecialQueries />} />
+        </Routes>
+      </main>
+    </Router>
+  );
 }
-
-
-export default App
