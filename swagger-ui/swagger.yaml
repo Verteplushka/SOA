@@ -211,7 +211,8 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/City"
+                  allOf:
+                    - $ref: "#/components/schemas/City"
                   xml:
                     name: city
                 xml:
