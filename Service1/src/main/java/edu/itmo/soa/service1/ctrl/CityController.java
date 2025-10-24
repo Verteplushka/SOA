@@ -1,6 +1,7 @@
 package edu.itmo.soa.service1.ctrl;
 
 import edu.itmo.soa.service1.dto.request.CityInput;
+import edu.itmo.soa.service1.dto.request.CitySearchRequest;
 import edu.itmo.soa.service1.entity.City;
 import edu.itmo.soa.service1.entity.Coordinates;
 import edu.itmo.soa.service1.entity.Human;
@@ -49,7 +50,17 @@ public class CityController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCityById(@PathVariable("id") int id) {
         cityService.deleteById(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(value = "/search", consumes = MediaType.APPLICATION_XML_VALUE)
+    public ResponseEntity<?> searchCities(@RequestBody CitySearchRequest request) {
+        try {
+            return ResponseEntity.ok(cityService.searchCities(request));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse("BAD_REQUEST", e.getMessage(), ZonedDateTime.now()));
+        }
     }
 
     @ExceptionHandler(CityNotFoundException.class)

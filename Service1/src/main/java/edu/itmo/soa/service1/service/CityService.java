@@ -1,6 +1,8 @@
 package edu.itmo.soa.service1.service;
 
 import edu.itmo.soa.service1.dto.request.CityInput;
+import edu.itmo.soa.service1.dto.request.CitySearchRequest;
+import edu.itmo.soa.service1.dto.response.CityPageResponse;
 import edu.itmo.soa.service1.entity.City;
 import edu.itmo.soa.service1.entity.Coordinates;
 import edu.itmo.soa.service1.entity.Human;
@@ -9,7 +11,13 @@ import edu.itmo.soa.service1.exception.CityNotFoundException;
 import edu.itmo.soa.service1.exception.InvalidCityDataException;
 import edu.itmo.soa.service1.repo.CityRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -74,6 +82,53 @@ public class CityService {
         return cityRepository.save(city);
     }
 
+    public CityPageResponse searchCities(CitySearchRequest request) {
+        int page = request.getPagination().getPage();
+        int size = request.getPagination().getSize();
+
+        Sort sort = Sort.by(Sort.Direction.fromString(request.getSort().getDirection().name()),
+                request.getSort().getField());
+
+        List<City> allCities = cityRepository.findAll();
+        List<City> filtered = new ArrayList<>();
+
+        for (City city : allCities) {
+            if (request.getFilter() != null) {
+                boolean matches = true;
+
+                if (request.getFilter().getName() != null &&
+                        !city.getName().contains(request.getFilter().getName())) {
+                    matches = false;
+                }
+
+                if (request.getFilter().getArea() != null) {
+                    Integer min = request.getFilter().getArea().getMin();
+                    Integer max = request.getFilter().getArea().getMax();
+                    if ((min != null && city.getArea() < min) || (max != null && city.getArea() > max)) {
+                        matches = false;
+                    }
+                }
+
+                if (!matches) continue;
+            }
+            filtered.add(city);
+        }
+
+        int start = Math.min(page * size, filtered.size());
+        int end = Math.min(start + size, filtered.size());
+        List<City> pageContent = filtered.subList(start, end);
+
+        CityPageResponse response = new CityPageResponse();
+        CityPageResponse.Pagination pagination = new CityPageResponse.Pagination();
+        pagination.setCurrentPage(page);
+        pagination.setTotalPages((int) Math.ceil((double) filtered.size() / size));
+        pagination.setPageSize(size);
+
+        response.setPagination(pagination);
+        response.setCities(pageContent);
+
+        return response;
+    }
 
     private void validateCityInput(CityInput input) {
         if (input.getName() == null || input.getName().trim().isEmpty()) {
