@@ -24,6 +24,25 @@ function CityForm() {
 
   const [error, setError] = useState("");
 
+  const parseEstablishmentDate = (value) => {
+    if (!value) return "";
+
+    if (Array.isArray(value)) {
+      const [year, month, day] = value;
+      if (year && month && day) {
+        const mm = String(month).padStart(2, "0");
+        const dd = String(day).padStart(2, "0");
+        return `${year}-${mm}-${dd}`;
+      }
+    }
+
+    if (typeof value === "string") {
+      return value.slice(0, 10);
+    }
+
+    return "";
+  };
+
   useEffect(() => {
     if (id) {
       getCity(id)
@@ -32,18 +51,16 @@ function CityForm() {
           setCity({
             name: data.name,
             coordinates: {
-              x: Number(data.coordinates.x),
-              y: Number(data.coordinates.y),
+              x: data.coordinates.x,
+              y: data.coordinates.y,
             },
-            area: Number(data.area),
-            population: Number(data.population),
-            metersAboveSeaLevel: Number(data.metersAboveSeaLevel || 0),
-            establishmentDate: data.establishmentDate
-              ? data.establishmentDate.slice(0, 10)
-              : "",
-            populationDensity: Number(data.populationDensity || 0),
+            area: data.area,
+            population: data.population,
+            metersAboveSeaLevel: data.metersAboveSeaLevel || 0,
+            establishmentDate: parseEstablishmentDate(data.establishmentDate),
+            populationDensity: data.populationDensity || 0,
             government: data.government,
-            governor: { age: Number(data.governor.age || 0) },
+            governor: { age: data.governor.age || 0 },
           });
         })
         .catch(() => setError("Не удалось загрузить данные города"));
@@ -73,6 +90,26 @@ function CityForm() {
     e.preventDefault();
     setError("");
 
+    const formatLocalDateTime = (d) => {
+      if (!d) return null;
+
+      let year, month, day;
+
+      if (typeof d === "string") {
+        // d = "YYYY-MM-DD"
+        [year, month, day] = d.split("-");
+      } else if (d instanceof Date) {
+        year = d.getFullYear();
+        month = String(d.getMonth() + 1).padStart(2, "0");
+        day = String(d.getDate()).padStart(2, "0");
+      } else {
+        return null; // неизвестный формат
+      }
+
+      if (!year || !month || !day) return null;
+      return `${year}-${month}-${day}T00:00:00`;
+    };
+
     const cityToSend = {
       ...city,
       coordinates: {
@@ -84,9 +121,7 @@ function CityForm() {
       metersAboveSeaLevel: Number(city.metersAboveSeaLevel),
       populationDensity: Number(city.populationDensity),
       governor: { age: Number(city.governor.age) },
-      establishmentDate: city.establishmentDate
-        ? city.establishmentDate + "T00:00:00"
-        : null,
+      establishmentDate: formatLocalDateTime(city.establishmentDate),
     };
 
     try {
