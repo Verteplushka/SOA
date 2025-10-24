@@ -3,8 +3,6 @@ package edu.itmo.soa.service1.ctrl;
 import edu.itmo.soa.service1.dto.request.CityInput;
 import edu.itmo.soa.service1.dto.request.CitySearchRequest;
 import edu.itmo.soa.service1.entity.City;
-import edu.itmo.soa.service1.entity.Coordinates;
-import edu.itmo.soa.service1.entity.Human;
 import edu.itmo.soa.service1.dto.error.ErrorResponse;
 import edu.itmo.soa.service1.exception.CityAlreadyExistsException;
 import edu.itmo.soa.service1.exception.CityNotFoundException;
@@ -61,6 +59,12 @@ public class CityController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ErrorResponse("BAD_REQUEST", e.getMessage(), ZonedDateTime.now()));
         }
+    }
+
+    @DeleteMapping("/by-meters-above-sea-level")
+    public ResponseEntity<?> deleteCityByMetersAboveSeaLevel(@RequestParam("meters") int meters) {
+        cityService.deleteByMetersAboveSeaLevel(meters);
+        return ResponseEntity.noContent().build();
     }
 
     @ExceptionHandler(CityNotFoundException.class)

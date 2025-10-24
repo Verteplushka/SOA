@@ -11,13 +11,12 @@ import edu.itmo.soa.service1.exception.CityNotFoundException;
 import edu.itmo.soa.service1.exception.InvalidCityDataException;
 import edu.itmo.soa.service1.repo.CityRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,12 +25,13 @@ public class CityService {
     private final CityRepository cityRepository;
 
     public City findById(int id) {
-        return cityRepository.findById(id).orElseThrow(() -> new CityNotFoundException(id));
+        return cityRepository.findById(id)
+                .orElseThrow(() -> new CityNotFoundException("ID", id));
     }
 
     public void deleteById(int id) {
         City city = cityRepository.findById(id)
-                .orElseThrow(() -> new CityNotFoundException(id));
+                .orElseThrow(() -> new CityNotFoundException("ID", id));
         cityRepository.delete(city);
     }
 
@@ -60,7 +60,7 @@ public class CityService {
 
     public City updateCity(int id, CityInput input) {
         City existing = cityRepository.findById(id)
-                .orElseThrow(() -> new CityNotFoundException(id));
+                .orElseThrow(() -> new CityNotFoundException("ID", id));
 
         validateCityInput(input);
 
@@ -129,6 +129,15 @@ public class CityService {
 
         return response;
     }
+
+    public void deleteByMetersAboveSeaLevel(int meters) {
+        List<City> cityList= cityRepository.findByMetersAboveSeaLevel(meters);
+        if(cityList.isEmpty()) {
+            throw new CityNotFoundException("metersAboveSeaLevel", meters);
+        }
+        cityRepository.delete(cityList.get(0));
+    }
+
 
     private void validateCityInput(CityInput input) {
         if (input.getName() == null || input.getName().trim().isEmpty()) {
