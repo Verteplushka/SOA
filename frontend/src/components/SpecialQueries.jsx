@@ -125,7 +125,7 @@ export default function SpecialQueries() {
       <div className="card mb-4 shadow-sm">
         <div className="card-body">
           <h3 className="card-title mb-3">
-            Поиск по возрасту губернатора (age)
+            Поиск городов с губернатором старше (age)
           </h3>
           <div className="input-group mb-2">
             <input

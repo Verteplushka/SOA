@@ -1,13 +1,11 @@
 import { useState } from "react";
-import { XMLParser } from "fast-xml-parser";
 import { genocideCount, genocideMoveToPoorest } from "../api/api-service2";
+import CitiesTableGenocide from "../components/CitiesTableGenocide";
 
-const parser = new XMLParser({ ignoreAttributes: false });
-
-// Для корректного извлечения XML сообщений ошибок
 function parseErrorMessage(xmlString) {
   try {
-    const xml = parser.parse(xmlString);
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(xmlString, "text/xml");
     const messageNode = xml.getElementsByTagName("message")[0];
     if (messageNode) return messageNode.textContent;
   } catch (e) {
@@ -16,7 +14,6 @@ function parseErrorMessage(xmlString) {
   return "Неизвестная ошибка";
 }
 
-// Форматируем дату из массива [year, month, day, ...]
 function formatEstDate(arr) {
   if (!Array.isArray(arr) || arr.length < 3) return "";
   return `${arr[0]}-${String(arr[1]).padStart(2, "0")}-${String(
@@ -37,11 +34,8 @@ export default function Genocide() {
     setCountError(null);
     try {
       const res = await genocideCount(ids.id1, ids.id2, ids.id3);
-      console.log(res);
-      const xml = parser.parse(res.data); // res.data должно быть строкой XML
-      console.log(xml);
-      const totalNode = xml.getElementsByTagName("totalPopulation")[0];
-      setTotalPopulation(totalNode?.textContent ?? "0");
+      const total = res.population?.totalPopulation ?? "0";
+      setTotalPopulation(total);
     } catch (e) {
       const msg = e.response?.data
         ? parseErrorMessage(e.response.data)
@@ -57,7 +51,12 @@ export default function Genocide() {
       const res = await genocideMoveToPoorest(moveId);
       const source = res?.relocationResult?.sourceCity;
       const target = res?.relocationResult?.targetCity;
-      if (source && target) setMoveResult([source, target]);
+      if (source && target) {
+        setMoveResult([
+          { ...source, role: "Source" },
+          { ...target, role: "Target" },
+        ]);
+      }
     } catch (e) {
       const msg = e.response?.data
         ? parseErrorMessage(e.response.data)
@@ -66,58 +65,10 @@ export default function Genocide() {
     }
   };
 
-  const renderTable = (cities) => (
-    <div className="card shadow-sm mb-4">
-      <div className="card-body">
-        <div style={{ overflowX: "auto" }}>
-          <table className="table table-bordered table-striped">
-            <thead className="table-dark">
-              <tr>
-                {[
-                  "ID",
-                  "Name",
-                  "X",
-                  "Y",
-                  "Area",
-                  "Population",
-                  "Meters Above Sea Level",
-                  "Population Density",
-                  "Government",
-                  "Governor Age",
-                  "Establishment Date",
-                ].map((h) => (
-                  <th key={h}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {cities.map((city, i) => (
-                <tr key={city.id || i}>
-                  <td>{city.id}</td>
-                  <td>{city.name}</td>
-                  <td>{city.coordinates?.x ?? 0}</td>
-                  <td>{city.coordinates?.y ?? 0}</td>
-                  <td>{city.area}</td>
-                  <td>{city.population}</td>
-                  <td>{city.metersAboveSeaLevel}</td>
-                  <td>{city.populationDensity}</td>
-                  <td>{city.government ?? "—"}</td>
-                  <td>{city.governor?.age ?? "—"}</td>
-                  <td>{formatEstDate(city.establishmentDate)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="container my-4">
       <h2 className="mb-4">Геноцидные эндпоинты</h2>
 
-      {/* Первый эндпоинт */}
       <div className="card mb-4 shadow-sm">
         <div className="card-body">
           <h3 className="card-title mb-3">Суммарное население 3 городов</h3>
@@ -147,10 +98,11 @@ export default function Genocide() {
         </div>
       </div>
 
-      {/* Второй эндпоинт */}
       <div className="card mb-4 shadow-sm">
         <div className="card-body">
-          <h3 className="card-title mb-3">Переселить в наименьший город</h3>
+          <h3 className="card-title mb-3">
+            Переселить в город с наихудшим уровнем жизни
+          </h3>
           <div className="input-group mb-3">
             <input
               type="text"
@@ -164,7 +116,7 @@ export default function Genocide() {
             </button>
           </div>
           {moveError && <div className="text-danger mt-3">{moveError}</div>}
-          {moveResult && renderTable(moveResult)}
+          {moveResult && <CitiesTableGenocide cities={moveResult} />}
         </div>
       </div>
     </div>
