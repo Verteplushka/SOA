@@ -12,8 +12,6 @@ public class ErrorResponse {
     private String message;
     private String timestamp;
 
-    public ErrorResponse() {}
-
     public ErrorResponse(String error, String message) {
         this.error = error;
         this.message = message;

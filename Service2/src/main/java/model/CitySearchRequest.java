@@ -12,5 +12,5 @@ public class CitySearchRequest {
 
     private Pagination pagination;
     private Sort sort;
-    private Filter filter = new Filter(); // если фильтры не нужны, можно оставить пустыми
+    private Filter filter = new Filter();
 }

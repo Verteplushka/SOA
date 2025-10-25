@@ -19,5 +19,5 @@ public class CityInput {
     private LocalDateTime establishmentDate;
     private Float populationDensity;
     private Government government;
-    private GovernorInput governor;
+    private HumanInput governor;
 }

@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @XmlRootElement(name = "governor")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class GovernorInput {
+public class HumanInput {
     private int age;
 }
