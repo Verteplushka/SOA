@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { searchCities, deleteCity } from "../api";
 import { useNavigate } from "react-router-dom";
+import { useCallback } from "react";
 import CityRow from "../components/CityRow";
 
-const governmentOptions = ["DIARCHY", "KRITARCHY", "REPUBLIC"];
+const governmentOptions = ["ALL", "DIARCHY", "KRITARCHY", "REPUBLIC"];
 
 export default function Home() {
   const [cities, setCities] = useState([]);
@@ -11,50 +12,66 @@ export default function Home() {
   const [sortField, setSortField] = useState("");
   const [sortDirection, setSortDirection] = useState("ASC");
   const [searchValues, setSearchValues] = useState({});
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+
   const navigate = useNavigate();
 
-  const fetchCities = async () => {
-    const requestBody = {
-      pagination: { page: 0, size: 100 },
-      sort: sortField ? [{ field: sortField, direction: sortDirection }] : [],
-      filter: { ...filters, ...searchValues },
-    };
+  const fetchCities = useCallback(async () => {
+    const preparedFilters = { ...filters, ...searchValues };
 
-    console.log("=== Отправка запроса ===");
-    console.log(JSON.stringify(requestBody, null, 2));
+    if (preparedFilters.establishmentDate) {
+      const ed = preparedFilters.establishmentDate;
+      preparedFilters.establishmentDate = {
+        min: ed.min ? `${ed.min}T00:00:00` : undefined,
+        max: ed.max ? `${ed.max}T23:59:59` : undefined,
+      };
+    }
+
+    const requestBody = {
+      pagination: { page: page, size },
+      sort: sortField ? [{ field: sortField, direction: sortDirection }] : [],
+      filter: preparedFilters,
+    };
 
     try {
       const res = await searchCities(requestBody);
-
-      console.log("=== Ответ сервера ===");
-      console.log(res);
-
       const cityData = res?.cityPageResponse?.cities?.cities || [];
-      const cityArray = Array.isArray(cityData) ? cityData : [cityData];
-      setCities(cityArray);
+      setCities(Array.isArray(cityData) ? cityData : [cityData]);
+
+      const total = res?.cityPageResponse?.pagination?.totalPages;
+      setTotalPages(total ?? 1);
     } catch (e) {
       console.error("Ошибка при получении городов:", e);
       alert("Ошибка при получении городов");
     }
+  }, [filters, searchValues, sortField, sortDirection, page, size]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 0 && newPage < totalPages) setPage(newPage);
+  };
+
+  const handleSizeChange = (e) => {
+    setSize(Number(e.target.value));
+    setPage(0);
   };
 
   useEffect(() => {
     fetchCities();
-  }, [filters, sortField, sortDirection, searchValues]);
+  }, [fetchCities]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Удалить этот город?")) return;
     try {
       await deleteCity(id);
       fetchCities();
-    } catch (err) {
+    } catch {
       alert("Ошибка при удалении города");
     }
   };
 
-  const handleEdit = (id) => {
-    navigate(`/edit/${id}`);
-  };
+  const handleEdit = (id) => navigate(`/edit/${id}`);
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -66,7 +83,6 @@ export default function Home() {
   };
 
   const handleRangeChange = (field, bound, value) => {
-    // bound = "min" | "max"
     setSearchValues((prev) => ({
       ...prev,
       [field]: {
@@ -112,19 +128,50 @@ export default function Home() {
                 {col.field === "government" ? (
                   <select
                     style={{ width: "100px" }}
-                    value={searchValues[col.field] || ""}
+                    value={searchValues[col.field] || "ALL"}
                     onChange={(e) =>
-                      handleSelectChange(col.field, e.target.value)
+                      handleSelectChange(
+                        col.field,
+                        e.target.value === "ALL" ? null : e.target.value
+                      )
                     }
                   >
-                    <option value="">Все</option>
                     {governmentOptions.map((gov) => (
                       <option key={gov} value={gov}>
                         {gov}
                       </option>
                     ))}
                   </select>
-                ) : (
+                ) : col.field === "name" ? (
+                  <input
+                    type="text"
+                    style={{ width: "100px" }}
+                    value={searchValues[col.field] || ""}
+                    onChange={(e) =>
+                      handleSelectChange(col.field, e.target.value)
+                    }
+                    placeholder="Поиск"
+                  />
+                ) : col.field === "establishmentDate" ? (
+                  <>
+                    <input
+                      type="date"
+                      style={{ width: "80px" }}
+                      value={searchValues[col.field]?.min || ""}
+                      onChange={(e) =>
+                        handleRangeChange(col.field, "min", e.target.value)
+                      }
+                    />
+                    <input
+                      type="date"
+                      style={{ width: "80px" }}
+                      value={searchValues[col.field]?.max || ""}
+                      onChange={(e) =>
+                        handleRangeChange(col.field, "max", e.target.value)
+                      }
+                    />
+                  </>
+                ) : col.field === "id" ? null : (
                   <>
                     <input
                       type="text"
@@ -170,6 +217,55 @@ export default function Home() {
           )}
         </tbody>
       </table>
+
+      <div className="d-flex justify-content-between align-items-center mt-3">
+        <div>
+          <button
+            className="btn btn-sm btn-outline-primary me-1"
+            onClick={() => handlePageChange(0)}
+            disabled={page === 0}
+          >
+            {"<<"}
+          </button>
+          <button
+            className="btn btn-sm btn-outline-primary me-1"
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 0}
+          >
+            {"<"}
+          </button>
+          <span>
+            Страница {page + 1} из {totalPages}
+          </span>
+          <button
+            className="btn btn-sm btn-outline-primary ms-1"
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page >= totalPages - 1}
+          >
+            {">"}
+          </button>
+          <button
+            className="btn btn-sm btn-outline-primary ms-1"
+            onClick={() => handlePageChange(totalPages - 1)}
+            disabled={page >= totalPages - 1}
+          >
+            {">>"}
+          </button>
+        </div>
+
+        <div>
+          <label>
+            Записей на странице:{" "}
+            <select value={size} onChange={handleSizeChange}>
+              {[5, 10, 20, 50, 100].map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </div>
     </div>
   );
 }
