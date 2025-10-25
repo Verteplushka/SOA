@@ -10,6 +10,6 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 @Configuration
 @ComponentScan("edu.itmo.soa.service1")
 @EnableJpaRepositories("edu.itmo.soa.service1.repo")
-@Import({DatabaseConfig.class})
+@Import({DatabaseConfig.class, WebConfig.class})
 public class Config {
 }
