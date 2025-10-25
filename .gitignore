@@ -1,4 +1,9 @@
 node_modules/
 package-lock.json
 .idea/
+**/.idea/
 jetty*
+**/target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
