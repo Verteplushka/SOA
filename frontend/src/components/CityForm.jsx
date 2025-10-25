@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { addCity, getCity, updateCity } from "../api";
+import { addCity, getCity, updateCity } from "../api/api-service1";
 import { XMLParser } from "fast-xml-parser";
 
 const governmentOptions = ["DIARCHY", "KRITARCHY", "REPUBLIC"];

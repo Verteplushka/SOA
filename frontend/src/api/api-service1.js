@@ -2,12 +2,11 @@ import axios from "axios";
 import { XMLParser, XMLBuilder } from "fast-xml-parser";
 
 const BASE_URL =
-  import.meta.env.VITE_API_BASE || "http://localhost:8080/Service1"; // change if needed
+  import.meta.env.VITE_API_BASE || "http://localhost:8080/Service1";
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/xml" },
-  // NOTE: in browsers you cannot bypass TLS checks programmatically. Accept self-signed cert in browser or use valid cert.
 });
 
 const parser = new XMLParser({
@@ -21,7 +20,6 @@ const builder = new XMLBuilder({
 });
 
 function toXml(obj, rootName = null) {
-  // builder expects an object root; if rootName provided, wrap
   if (rootName) {
     const w = {};
     w[rootName] = obj;
@@ -85,15 +83,5 @@ export async function byGovernorAge(age) {
   const res = await axiosInstance.get(
     `/cities/by-governor-age?age=${encodeURIComponent(age)}`
   );
-  return parseXml(res.data);
-}
-
-export async function genocideCount(id1, id2, id3) {
-  const res = await axiosInstance.post(`/genocide/count/${id1}/${id2}/${id3}`);
-  return parseXml(res.data);
-}
-
-export async function genocideMoveToPoorest(id) {
-  const res = await axiosInstance.post(`/genocide/move-to-poorest/${id}`);
   return parseXml(res.data);
 }

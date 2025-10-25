@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { deleteByMeters, byNamePrefix, byGovernorAge } from "../api";
+import {
+  deleteByMeters,
+  byNamePrefix,
+  byGovernorAge,
+} from "../api/api-service1";
 import SimpleCitiesTable from "../components/SimpleCitiesTable";
 
 function getNestedValue(obj) {

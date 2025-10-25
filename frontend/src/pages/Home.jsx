@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { searchCities, deleteCity } from "../api";
+import { searchCities, deleteCity } from "../api/api-service1";
 import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
 import CityRow from "../components/CityRow";

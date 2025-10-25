@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { genocideCount, genocideMoveToPoorest } from "../api";
+import { genocideCount, genocideMoveToPoorest } from "../api/api-service2";
 
 export default function Genocide() {
   const [ids, setIds] = useState({ id1: "", id2: "", id3: "" });
