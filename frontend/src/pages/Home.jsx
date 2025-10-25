@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { searchCities, deleteCity } from "../api";
 import { useNavigate } from "react-router-dom";
+import { useCallback } from "react";
 import CityRow from "../components/CityRow";
 
 const governmentOptions = ["ALL", "DIARCHY", "KRITARCHY", "REPUBLIC"];
@@ -11,9 +12,13 @@ export default function Home() {
   const [sortField, setSortField] = useState("");
   const [sortDirection, setSortDirection] = useState("ASC");
   const [searchValues, setSearchValues] = useState({});
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+
   const navigate = useNavigate();
 
-  const fetchCities = async () => {
+  const fetchCities = useCallback(async () => {
     const preparedFilters = { ...filters, ...searchValues };
 
     if (preparedFilters.establishmentDate) {
@@ -25,7 +30,7 @@ export default function Home() {
     }
 
     const requestBody = {
-      pagination: { page: 0, size: 100 },
+      pagination: { page: page, size },
       sort: sortField ? [{ field: sortField, direction: sortDirection }] : [],
       filter: preparedFilters,
     };
@@ -33,17 +38,28 @@ export default function Home() {
     try {
       const res = await searchCities(requestBody);
       const cityData = res?.cityPageResponse?.cities?.cities || [];
-      const cityArray = Array.isArray(cityData) ? cityData : [cityData];
-      setCities(cityArray);
+      setCities(Array.isArray(cityData) ? cityData : [cityData]);
+
+      const total = res?.cityPageResponse?.pagination?.totalPages;
+      setTotalPages(total ?? 1);
     } catch (e) {
       console.error("Ошибка при получении городов:", e);
       alert("Ошибка при получении городов");
     }
+  }, [filters, searchValues, sortField, sortDirection, page, size]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 0 && newPage < totalPages) setPage(newPage);
+  };
+
+  const handleSizeChange = (e) => {
+    setSize(Number(e.target.value));
+    setPage(0);
   };
 
   useEffect(() => {
     fetchCities();
-  }, [filters, sortField, sortDirection, searchValues]);
+  }, [fetchCities]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Удалить этот город?")) return;
@@ -201,6 +217,55 @@ export default function Home() {
           )}
         </tbody>
       </table>
+
+      <div className="d-flex justify-content-between align-items-center mt-3">
+        <div>
+          <button
+            className="btn btn-sm btn-outline-primary me-1"
+            onClick={() => handlePageChange(0)}
+            disabled={page === 0}
+          >
+            {"<<"}
+          </button>
+          <button
+            className="btn btn-sm btn-outline-primary me-1"
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 0}
+          >
+            {"<"}
+          </button>
+          <span>
+            Страница {page + 1} из {totalPages}
+          </span>
+          <button
+            className="btn btn-sm btn-outline-primary ms-1"
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page >= totalPages - 1}
+          >
+            {">"}
+          </button>
+          <button
+            className="btn btn-sm btn-outline-primary ms-1"
+            onClick={() => handlePageChange(totalPages - 1)}
+            disabled={page >= totalPages - 1}
+          >
+            {">>"}
+          </button>
+        </div>
+
+        <div>
+          <label>
+            Записей на странице:{" "}
+            <select value={size} onChange={handleSizeChange}>
+              {[5, 10, 20, 50, 100].map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </div>
     </div>
   );
 }
