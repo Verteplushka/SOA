@@ -25,37 +25,72 @@ export default function Genocide() {
   };
 
   return (
-    <div>
-      <h2>Геноцидные эндпоинты</h2>
-      <div>
-        <h3>Суммарное население 3 городов</h3>
-        <input
-          placeholder="ID1"
-          value={ids.id1}
-          onChange={(e) => setIds({ ...ids, id1: e.target.value })}
-        />
-        <input
-          placeholder="ID2"
-          value={ids.id2}
-          onChange={(e) => setIds({ ...ids, id2: e.target.value })}
-        />
-        <input
-          placeholder="ID3"
-          value={ids.id3}
-          onChange={(e) => setIds({ ...ids, id3: e.target.value })}
-        />
-        <button onClick={handleCount}>Посчитать</button>
+    <div className="container my-4">
+      <h2 className="mb-4">Геноцидные эндпоинты</h2>
+
+      <div className="card mb-4 shadow-sm">
+        <div className="card-body">
+          <h3 className="card-title mb-3">Суммарное население 3 городов</h3>
+          <div className="row g-2 mb-3">
+            <div className="col-md">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="ID1"
+                value={ids.id1}
+                onChange={(e) => setIds({ ...ids, id1: e.target.value })}
+              />
+            </div>
+            <div className="col-md">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="ID2"
+                value={ids.id2}
+                onChange={(e) => setIds({ ...ids, id2: e.target.value })}
+              />
+            </div>
+            <div className="col-md">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="ID3"
+                value={ids.id3}
+                onChange={(e) => setIds({ ...ids, id3: e.target.value })}
+              />
+            </div>
+          </div>
+          <button className="btn btn-primary" onClick={handleCount}>
+            Посчитать
+          </button>
+        </div>
       </div>
-      <div>
-        <h3>Переселить в наименьший город</h3>
-        <input
-          placeholder="ID"
-          value={moveId}
-          onChange={(e) => setMoveId(e.target.value)}
-        />
-        <button onClick={handleMove}>Переселить</button>
+
+      <div className="card mb-4 shadow-sm">
+        <div className="card-body">
+          <h3 className="card-title mb-3">Переселить в наименьший город</h3>
+          <div className="input-group mb-3">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="ID"
+              value={moveId}
+              onChange={(e) => setMoveId(e.target.value)}
+            />
+            <button className="btn btn-warning" onClick={handleMove}>
+              Переселить
+            </button>
+          </div>
+        </div>
       </div>
-      {result && <pre>{result}</pre>}
+
+      {result && (
+        <div className="card shadow-sm">
+          <div className="card-body">
+            <pre>{result}</pre>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
