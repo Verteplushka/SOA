@@ -63,7 +63,11 @@ public class CityController {
     }
 
     @DeleteMapping("/by-meters-above-sea-level")
-    public ResponseEntity<?> deleteCityByMetersAboveSeaLevel(@RequestParam("meters") int meters) {
+    public ResponseEntity<?> deleteCityByMetersAboveSeaLevel(@RequestParam(value = "meters", required = false) Integer meters) {
+        if(meters == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse("BAD_REQUEST", "Параметр metersAboveSeaLevel не может быть пустой", ZonedDateTime.now()));
+        }
         cityService.deleteByMetersAboveSeaLevel(meters);
         return ResponseEntity.noContent().build();
     }
@@ -75,10 +79,15 @@ public class CityController {
     }
 
     @GetMapping("/by-governor-age")
-    public ResponseEntity<?> getCitiesByGovernorAge(@RequestParam("age") int age) {
+    public ResponseEntity<?> getCitiesByGovernorAge(@RequestParam(value = "age", required = false) Integer age) {
+        if (age == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse("BAD_REQUEST", "Параметр age не может быть пустой", ZonedDateTime.now()));
+        }
         List<City> cities = cityService.getCitiesByGovernorAge(age);
         return ResponseEntity.ok(cities);
     }
+
 
     @ExceptionHandler(CityNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCityNotFoundById(CityNotFoundException exception) {

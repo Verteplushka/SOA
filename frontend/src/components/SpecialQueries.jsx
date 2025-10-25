@@ -1,37 +1,77 @@
 import { useState } from "react";
 import { deleteByMeters, byNamePrefix, byGovernorAge } from "../api";
+import SimpleCitiesTable from "../components/SimpleCitiesTable";
+
+function getNestedValue(obj) {
+  if (obj === null || obj === undefined) return "";
+  if (typeof obj === "object") return JSON.stringify(obj);
+  return obj;
+}
+
+function parseErrorMessage(xmlString) {
+  try {
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(xmlString, "text/xml");
+    const messageNode = xml.getElementsByTagName("message")[0];
+    if (messageNode) return messageNode.textContent;
+  } catch (e) {
+    console.error("Ошибка парсинга XML:", e);
+  }
+  return "Неизвестная ошибка";
+}
 
 export default function SpecialQueries() {
   const [meters, setMeters] = useState("");
   const [prefix, setPrefix] = useState("");
   const [age, setAge] = useState("");
-  const [result, setResult] = useState(null);
+
+  const [deleteResult, setDeleteResult] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
+  const [prefixError, setPrefixError] = useState(null);
+  const [ageError, setAgeError] = useState(null);
+  const [tableResult, setTableResult] = useState([]);
 
   const handleDelete = async () => {
+    setDeleteResult(null);
+    setDeleteError(null);
     try {
       const res = await deleteByMeters(meters);
-      setResult("Удалено: " + res);
+      setDeleteResult(`Объект успешно удален!`);
     } catch (e) {
-      console.error(e);
-      setResult(e.toString());
+      const msg = e.response?.data
+        ? parseErrorMessage(e.response.data)
+        : e.message || e.toString();
+      setDeleteError(msg);
     }
   };
 
   const handleByName = async () => {
+    setPrefixError(null);
+    setTableResult([]);
     try {
       const res = await byNamePrefix(prefix);
-      setResult(JSON.stringify(res, null, 2));
+      const cities = res?.ArrayList?.item || [];
+      setTableResult(Array.isArray(cities) ? cities : [cities]);
     } catch (e) {
-      console.error(e);
+      const msg = e.response?.data
+        ? parseErrorMessage(e.response.data)
+        : e.message || e.toString();
+      setPrefixError(msg);
     }
   };
 
   const handleByAge = async () => {
+    setAgeError(null);
+    setTableResult([]);
     try {
       const res = await byGovernorAge(age);
-      setResult(JSON.stringify(res, null, 2));
+      const cities = res?.ArrayList?.item || [];
+      setTableResult(Array.isArray(cities) ? cities : [cities]);
     } catch (e) {
-      console.error(e);
+      const msg = e.response?.data
+        ? parseErrorMessage(e.response.data)
+        : e.message || e.toString();
+      setAgeError(msg);
     }
   };
 
@@ -42,7 +82,7 @@ export default function SpecialQueries() {
       <div className="card mb-4 shadow-sm">
         <div className="card-body">
           <h3 className="card-title mb-3">Удалить по metersAboveSeaLevel</h3>
-          <div className="input-group mb-3">
+          <div className="input-group mb-2">
             <input
               type="number"
               className="form-control"
@@ -54,13 +94,15 @@ export default function SpecialQueries() {
               Удалить
             </button>
           </div>
+          {deleteResult && <div className="text-success">{deleteResult}</div>}
+          {deleteError && <div className="text-danger">{deleteError}</div>}
         </div>
       </div>
 
       <div className="card mb-4 shadow-sm">
         <div className="card-body">
           <h3 className="card-title mb-3">Поиск по имени (prefix)</h3>
-          <div className="input-group mb-3">
+          <div className="input-group mb-2">
             <input
               type="text"
               className="form-control"
@@ -72,6 +114,7 @@ export default function SpecialQueries() {
               Найти
             </button>
           </div>
+          {prefixError && <div className="text-danger">{prefixError}</div>}
         </div>
       </div>
 
@@ -80,7 +123,7 @@ export default function SpecialQueries() {
           <h3 className="card-title mb-3">
             Поиск по возрасту губернатора (age)
           </h3>
-          <div className="input-group mb-3">
+          <div className="input-group mb-2">
             <input
               type="number"
               className="form-control"
@@ -92,16 +135,11 @@ export default function SpecialQueries() {
               Найти
             </button>
           </div>
+          {ageError && <div className="text-danger">{ageError}</div>}
         </div>
       </div>
 
-      {result && (
-        <div className="card shadow-sm">
-          <div className="card-body">
-            <pre>{result}</pre>
-          </div>
-        </div>
-      )}
+      {tableResult.length > 0 && <SimpleCitiesTable cities={tableResult} />}
     </div>
   );
 }
