@@ -3,7 +3,7 @@ import { searchCities, deleteCity } from "../api";
 import { useNavigate } from "react-router-dom";
 import CityRow from "../components/CityRow";
 
-const governmentOptions = ["DIARCHY", "KRITARCHY", "REPUBLIC"];
+const governmentOptions = ["ALL", "DIARCHY", "KRITARCHY", "REPUBLIC"];
 
 export default function Home() {
   const [cities, setCities] = useState([]);
@@ -14,21 +14,24 @@ export default function Home() {
   const navigate = useNavigate();
 
   const fetchCities = async () => {
+    const preparedFilters = { ...filters, ...searchValues };
+
+    if (preparedFilters.establishmentDate) {
+      const ed = preparedFilters.establishmentDate;
+      preparedFilters.establishmentDate = {
+        min: ed.min ? `${ed.min}T00:00:00` : undefined,
+        max: ed.max ? `${ed.max}T23:59:59` : undefined,
+      };
+    }
+
     const requestBody = {
       pagination: { page: 0, size: 100 },
       sort: sortField ? [{ field: sortField, direction: sortDirection }] : [],
-      filter: { ...filters, ...searchValues },
+      filter: preparedFilters,
     };
-
-    console.log("=== Отправка запроса ===");
-    console.log(JSON.stringify(requestBody, null, 2));
 
     try {
       const res = await searchCities(requestBody);
-
-      console.log("=== Ответ сервера ===");
-      console.log(res);
-
       const cityData = res?.cityPageResponse?.cities?.cities || [];
       const cityArray = Array.isArray(cityData) ? cityData : [cityData];
       setCities(cityArray);
@@ -47,14 +50,12 @@ export default function Home() {
     try {
       await deleteCity(id);
       fetchCities();
-    } catch (err) {
+    } catch {
       alert("Ошибка при удалении города");
     }
   };
 
-  const handleEdit = (id) => {
-    navigate(`/edit/${id}`);
-  };
+  const handleEdit = (id) => navigate(`/edit/${id}`);
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -66,7 +67,6 @@ export default function Home() {
   };
 
   const handleRangeChange = (field, bound, value) => {
-    // bound = "min" | "max"
     setSearchValues((prev) => ({
       ...prev,
       [field]: {
@@ -112,19 +112,50 @@ export default function Home() {
                 {col.field === "government" ? (
                   <select
                     style={{ width: "100px" }}
-                    value={searchValues[col.field] || ""}
+                    value={searchValues[col.field] || "ALL"}
                     onChange={(e) =>
-                      handleSelectChange(col.field, e.target.value)
+                      handleSelectChange(
+                        col.field,
+                        e.target.value === "ALL" ? null : e.target.value
+                      )
                     }
                   >
-                    <option value="">Все</option>
                     {governmentOptions.map((gov) => (
                       <option key={gov} value={gov}>
                         {gov}
                       </option>
                     ))}
                   </select>
-                ) : (
+                ) : col.field === "name" ? (
+                  <input
+                    type="text"
+                    style={{ width: "100px" }}
+                    value={searchValues[col.field] || ""}
+                    onChange={(e) =>
+                      handleSelectChange(col.field, e.target.value)
+                    }
+                    placeholder="Поиск"
+                  />
+                ) : col.field === "establishmentDate" ? (
+                  <>
+                    <input
+                      type="date"
+                      style={{ width: "80px" }}
+                      value={searchValues[col.field]?.min || ""}
+                      onChange={(e) =>
+                        handleRangeChange(col.field, "min", e.target.value)
+                      }
+                    />
+                    <input
+                      type="date"
+                      style={{ width: "80px" }}
+                      value={searchValues[col.field]?.max || ""}
+                      onChange={(e) =>
+                        handleRangeChange(col.field, "max", e.target.value)
+                      }
+                    />
+                  </>
+                ) : col.field === "id" ? null : (
                   <>
                     <input
                       type="text"
