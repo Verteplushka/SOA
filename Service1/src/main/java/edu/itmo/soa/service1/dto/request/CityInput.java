@@ -5,6 +5,7 @@ import edu.itmo.soa.service1.entity.Government;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -22,7 +23,7 @@ public class CityInput {
     @Positive
     private Integer area;
 
-    @Positive
+    @PositiveOrZero
     private long population;
 
     private Integer metersAboveSeaLevel;

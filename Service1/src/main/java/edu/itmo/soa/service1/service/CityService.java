@@ -286,7 +286,7 @@ public class CityService {
             throw new InvalidCityDataException("Поле area должно быть > 0 и не null");
         }
 
-        if (input.getPopulation() <= 0) {
+        if (input.getPopulation() < 0) {
             throw new InvalidCityDataException("Поле population должно быть > 0");
         }
 
