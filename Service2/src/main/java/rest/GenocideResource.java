@@ -8,6 +8,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.util.Comparator;
+import java.util.List;
 
 @Path("/")
 @Produces(MediaType.APPLICATION_XML)
@@ -16,24 +17,37 @@ public class GenocideResource {
 
     @Inject
     private CityServiceClient cityServiceClient;
+
+    // -------------------------------
+    // Получение города по ID
+    // -------------------------------
     @GET
     @Path("/city/{id}")
     public Response getCityById(@PathParam("id") int id) {
         try {
             City city = cityServiceClient.getCity(id);
+
             if (city == null) {
+                // Если город не найден
                 return Response.status(Response.Status.NOT_FOUND)
                         .entity(new ErrorResponse("NOT_FOUND", "Город с id " + id + " не найден"))
                         .build();
             }
+
+            // Успешный ответ с городом
             return Response.ok(city).build();
+
         } catch (Exception e) {
+            // В случае ошибки сервера
             return Response.serverError()
                     .entity(new ErrorResponse("INTERNAL_SERVER_ERROR", e.getMessage()))
                     .build();
         }
     }
 
+    // -------------------------------
+    // Подсчет суммарного населения 3 городов
+    // -------------------------------
     @POST
     @Path("/count/{id1}/{id2}/{id3}")
     public Response countPopulation(
@@ -42,6 +56,7 @@ public class GenocideResource {
             @PathParam("id3") int id3) {
 
         try {
+            // Получаем города по ID
             City c1 = cityServiceClient.getCity(id1);
             City c2 = cityServiceClient.getCity(id2);
             City c3 = cityServiceClient.getCity(id3);
@@ -52,9 +67,11 @@ public class GenocideResource {
                         .build();
             }
 
-            long total = (long) c1.getPopulation() + c2.getPopulation() + c3.getPopulation();
+            // Суммируем население
+            long totalPopulation = c1.getPopulation() + c2.getPopulation() + c3.getPopulation();
+
             PopulationResponse result = new PopulationResponse();
-            result.setTotalPopulation(total);
+            result.setTotalPopulation(totalPopulation);
 
             return Response.ok(result).build();
 
@@ -65,23 +82,27 @@ public class GenocideResource {
         }
     }
 
-
+    // -------------------------------
+    // Переселение жителей в город с наименьшей плотностью
+    // -------------------------------
     @POST
     @Path("/move-to-poorest/{id}")
     public Response moveToPoorest(@PathParam("id") int sourceId) {
         try {
             // Получаем все города
-            var cities = cityServiceClient.getAllCities();
+            List<City> cities = cityServiceClient.getAllCities();
+
             if (cities.isEmpty()) {
                 return Response.status(Response.Status.NOT_FOUND)
                         .entity(new ErrorResponse("NOT_FOUND", "Нет доступных городов"))
                         .build();
             }
 
+            // Получаем исходный город
             City source = cityServiceClient.getCity(sourceId);
             if (source == null) {
                 return Response.status(Response.Status.NOT_FOUND)
-                        .entity(new ErrorResponse("NOT_FOUND", "Исходный город не найден, такого нет тупа"))
+                        .entity(new ErrorResponse("NOT_FOUND", "Исходный город не найден"))
                         .build();
             }
 
@@ -97,14 +118,15 @@ public class GenocideResource {
                         .build();
             }
 
-            // Переселяем жителей
+            // Переселение жителей
             poorest.setPopulation(poorest.getPopulation() + source.getPopulation());
             source.setPopulation(0);
 
-            // Обновляем города через сервис
+            // Обновляем данные городов через сервис
             cityServiceClient.updateCity(poorest);
             cityServiceClient.updateCity(source);
 
+            // Формируем ответ
             RelocationResponse response = new RelocationResponse();
             response.setSourceCity(source);
             response.setTargetCity(poorest);
@@ -117,5 +139,4 @@ public class GenocideResource {
                     .build();
         }
     }
-
 }
