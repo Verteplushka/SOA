@@ -29,8 +29,18 @@ export default function Home() {
       };
     }
 
+    const coordsX = preparedFilters["coordinates.x"];
+    const coordsY = preparedFilters["coordinates.y"];
+    if (coordsX || coordsY) {
+      preparedFilters.coordinates = {};
+      if (coordsX) preparedFilters.coordinates.x = coordsX;
+      if (coordsY) preparedFilters.coordinates.y = coordsY;
+      delete preparedFilters["coordinates.x"];
+      delete preparedFilters["coordinates.y"];
+    }
+
     const requestBody = {
-      pagination: { page: page, size },
+      pagination: { page, size },
       sort: sortField ? [{ field: sortField, direction: sortDirection }] : [],
       filter: preparedFilters,
     };
@@ -117,14 +127,35 @@ export default function Home() {
         <thead className="table-dark">
           <tr>
             {columns.map((col) => (
-              <th key={col.field} onClick={() => handleSort(col.field)}>
-                {col.label}{" "}
-                {sortField === col.field
-                  ? sortDirection === "ASC"
-                    ? "▲"
-                    : "▼"
-                  : ""}
-                <br />
+              <th key={col.field}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <span>{col.label}</span>
+                  <button
+                    onClick={() => handleSort(col.field)}
+                    style={{
+                      border: "none",
+                      background: "transparent",
+                      color: "white",
+                      cursor: "pointer",
+                      padding: 0,
+                      marginLeft: "4px",
+                    }}
+                    title="Сортировать"
+                  >
+                    {sortField === col.field
+                      ? sortDirection === "ASC"
+                        ? "▲"
+                        : "▼"
+                      : "↕"}
+                  </button>
+                </div>
+
                 {col.field === "government" ? (
                   <select
                     style={{ width: "100px" }}
@@ -174,22 +205,30 @@ export default function Home() {
                 ) : col.field === "id" ? null : (
                   <>
                     <input
-                      type="text"
+                      type="number"
+                      step="any"
                       placeholder="min"
                       style={{ width: "45px" }}
                       value={searchValues[col.field]?.min || ""}
-                      onChange={(e) =>
-                        handleRangeChange(col.field, "min", e.target.value)
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "" || /^-?\d*\.?\d*$/.test(val)) {
+                          handleRangeChange(col.field, "min", val);
+                        }
+                      }}
                     />
                     <input
-                      type="text"
+                      type="number"
+                      step="any"
                       placeholder="max"
                       style={{ width: "45px" }}
                       value={searchValues[col.field]?.max || ""}
-                      onChange={(e) =>
-                        handleRangeChange(col.field, "max", e.target.value)
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "" || /^-?\d*\.?\d*$/.test(val)) {
+                          handleRangeChange(col.field, "max", val);
+                        }
+                      }}
                     />
                   </>
                 )}
