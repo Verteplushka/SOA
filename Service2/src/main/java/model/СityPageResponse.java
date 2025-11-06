@@ -8,7 +8,7 @@ import java.util.List;
 @XmlRootElement(name = "cityPageResponse")
 @XmlAccessorType(XmlAccessType.FIELD)
 @Data
-public class cityPageResponse {
+public class СityPageResponse {
 
     //@XmlElement(name = "cities")
     @XmlElementWrapper(name = "cities") // outer <cities>
