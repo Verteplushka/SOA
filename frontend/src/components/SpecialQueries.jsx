@@ -123,7 +123,7 @@ export default function SpecialQueries() {
         {/* === Удаление по meters === */}
         <div className="card mb-4 shadow-sm">
           <div className="card-body">
-            <h3 className="card-title mb-3">Удалить по metersAboveSeaLevel</h3>
+            <h3 className="card-title mb-3">Удалить по метрам над уровнем моря</h3>
             <div className="input-group mb-2">
               <input
                   type="text"
@@ -154,7 +154,7 @@ export default function SpecialQueries() {
         {/* === Поиск по имени === */}
         <div className="card mb-4 shadow-sm">
           <div className="card-body">
-            <h3 className="card-title mb-3">Поиск по имени (prefix)</h3>
+            <h3 className="card-title mb-3">Поиск по имени</h3>
             <div className="input-group mb-2">
               <input
                   type="text"
@@ -185,7 +185,7 @@ export default function SpecialQueries() {
         <div className="card mb-4 shadow-sm">
           <div className="card-body">
             <h3 className="card-title mb-3">
-              Поиск городов с губернатором старше (age)
+              Поиск городов с губернатором старше заданного возраста
             </h3>
             <div className="input-group mb-2">
               <input

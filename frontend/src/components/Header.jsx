@@ -4,7 +4,7 @@ export default function Header() {
   return (
     <header className="bg-light p-3 mb-4 shadow-sm">
       <div className="container d-flex flex-column flex-md-row align-items-center justify-content-between">
-        <h1 className="h3 mb-2 mb-md-0">City Management</h1>
+        <h1 className="h3 mb-2 mb-md-0">Городское управление</h1>
         <nav className="nav">
           <Link className="nav-link px-2 text-dark" to="/">
             Главная
