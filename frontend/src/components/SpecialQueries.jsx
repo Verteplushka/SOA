@@ -72,8 +72,8 @@ export default function SpecialQueries() {
       setDeleteResult(`Объект успешно удален!`);
     } catch (e) {
       const msg = e.response?.data
-          ? parseErrorMessage(e.response.data)
-          : e.message || e.toString();
+        ? parseErrorMessage(e.response.data)
+        : e.message || e.toString();
       setDeleteError(msg);
     }
   };
@@ -87,12 +87,12 @@ export default function SpecialQueries() {
     }
     try {
       const res = await byNamePrefix(prefix);
-      const cities = res?.ArrayList?.item || [];
+      const cities = res?.citiesResponse?.cities?.city || [];
       setTableResult(Array.isArray(cities) ? cities : [cities]);
     } catch (e) {
       const msg = e.response?.data
-          ? parseErrorMessage(e.response.data)
-          : e.message || e.toString();
+        ? parseErrorMessage(e.response.data)
+        : e.message || e.toString();
       setPrefixError(msg);
     }
   };
@@ -106,115 +106,117 @@ export default function SpecialQueries() {
     }
     try {
       const res = await byGovernorAge(age);
-      const cities = res?.ArrayList?.item || [];
+      const cities = res?.citiesResponse?.cities?.city || [];
       setTableResult(Array.isArray(cities) ? cities : [cities]);
     } catch (e) {
       const msg = e.response?.data
-          ? parseErrorMessage(e.response.data)
-          : e.message || e.toString();
+        ? parseErrorMessage(e.response.data)
+        : e.message || e.toString();
       setAgeError(msg);
     }
   };
 
   return (
-      <div className="container my-4">
-        <h2 className="mb-4">Прочие эндпоинты</h2>
+    <div className="container my-4">
+      <h2 className="mb-4">Прочие эндпоинты</h2>
 
-        {/* === Удаление по meters === */}
-        <div className="card mb-4 shadow-sm">
-          <div className="card-body">
-            <h3 className="card-title mb-3">Удалить по метрам над уровнем моря</h3>
-            <div className="input-group mb-2">
-              <input
-                  type="text"
-                  className={`form-control ${
-                      validationErrors.meters ? "is-invalid" : ""
-                  }`}
-                  placeholder="meters"
-                  value={meters}
-                  onChange={(e) => {
-                    setMeters(e.target.value);
-                    validateMeters(e.target.value);
-                  }}
-              />
-              <button className="btn btn-danger" onClick={handleDelete}>
-                Удалить
-              </button>
-            </div>
-            {validationErrors.meters && (
-                <div className="invalid-feedback d-block">
-                  {validationErrors.meters}
-                </div>
-            )}
-            {deleteResult && <div className="text-success">{deleteResult}</div>}
-            {deleteError && <div className="text-danger">{deleteError}</div>}
+      {/* === Удаление по meters === */}
+      <div className="card mb-4 shadow-sm">
+        <div className="card-body">
+          <h3 className="card-title mb-3">
+            Удалить по метрам над уровнем моря
+          </h3>
+          <div className="input-group mb-2">
+            <input
+              type="text"
+              className={`form-control ${
+                validationErrors.meters ? "is-invalid" : ""
+              }`}
+              placeholder="meters"
+              value={meters}
+              onChange={(e) => {
+                setMeters(e.target.value);
+                validateMeters(e.target.value);
+              }}
+            />
+            <button className="btn btn-danger" onClick={handleDelete}>
+              Удалить
+            </button>
           </div>
-        </div>
-
-        {/* === Поиск по имени === */}
-        <div className="card mb-4 shadow-sm">
-          <div className="card-body">
-            <h3 className="card-title mb-3">Поиск по имени</h3>
-            <div className="input-group mb-2">
-              <input
-                  type="text"
-                  className={`form-control ${
-                      validationErrors.prefix ? "is-invalid" : ""
-                  }`}
-                  placeholder="prefix"
-                  value={prefix}
-                  onChange={(e) => {
-                    setPrefix(e.target.value);
-                    validatePrefix(e.target.value);
-                  }}
-              />
-              <button className="btn btn-primary" onClick={handleByName}>
-                Найти
-              </button>
+          {validationErrors.meters && (
+            <div className="invalid-feedback d-block">
+              {validationErrors.meters}
             </div>
-            {validationErrors.prefix && (
-                <div className="invalid-feedback d-block">
-                  {validationErrors.prefix}
-                </div>
-            )}
-            {prefixError && <div className="text-danger">{prefixError}</div>}
-          </div>
+          )}
+          {deleteResult && <div className="text-success">{deleteResult}</div>}
+          {deleteError && <div className="text-danger">{deleteError}</div>}
         </div>
-
-        {/* === Поиск по возрасту губернатора === */}
-        <div className="card mb-4 shadow-sm">
-          <div className="card-body">
-            <h3 className="card-title mb-3">
-              Поиск городов с губернатором старше заданного возраста
-            </h3>
-            <div className="input-group mb-2">
-              <input
-                  type="text"
-                  className={`form-control ${
-                      validationErrors.age ? "is-invalid" : ""
-                  }`}
-                  placeholder="age"
-                  value={age}
-                  onChange={(e) => {
-                    setAge(e.target.value);
-                    validateAge(e.target.value);
-                  }}
-              />
-              <button className="btn btn-warning" onClick={handleByAge}>
-                Найти
-              </button>
-            </div>
-            {validationErrors.age && (
-                <div className="invalid-feedback d-block">
-                  {validationErrors.age}
-                </div>
-            )}
-            {ageError && <div className="text-danger">{ageError}</div>}
-          </div>
-        </div>
-
-        {/* === Таблица результатов === */}
-        {tableResult.length > 0 && <SimpleCitiesTable cities={tableResult} />}
       </div>
+
+      {/* === Поиск по имени === */}
+      <div className="card mb-4 shadow-sm">
+        <div className="card-body">
+          <h3 className="card-title mb-3">Поиск по имени</h3>
+          <div className="input-group mb-2">
+            <input
+              type="text"
+              className={`form-control ${
+                validationErrors.prefix ? "is-invalid" : ""
+              }`}
+              placeholder="prefix"
+              value={prefix}
+              onChange={(e) => {
+                setPrefix(e.target.value);
+                validatePrefix(e.target.value);
+              }}
+            />
+            <button className="btn btn-primary" onClick={handleByName}>
+              Найти
+            </button>
+          </div>
+          {validationErrors.prefix && (
+            <div className="invalid-feedback d-block">
+              {validationErrors.prefix}
+            </div>
+          )}
+          {prefixError && <div className="text-danger">{prefixError}</div>}
+        </div>
+      </div>
+
+      {/* === Поиск по возрасту губернатора === */}
+      <div className="card mb-4 shadow-sm">
+        <div className="card-body">
+          <h3 className="card-title mb-3">
+            Поиск городов с губернатором старше заданного возраста
+          </h3>
+          <div className="input-group mb-2">
+            <input
+              type="text"
+              className={`form-control ${
+                validationErrors.age ? "is-invalid" : ""
+              }`}
+              placeholder="age"
+              value={age}
+              onChange={(e) => {
+                setAge(e.target.value);
+                validateAge(e.target.value);
+              }}
+            />
+            <button className="btn btn-warning" onClick={handleByAge}>
+              Найти
+            </button>
+          </div>
+          {validationErrors.age && (
+            <div className="invalid-feedback d-block">
+              {validationErrors.age}
+            </div>
+          )}
+          {ageError && <div className="text-danger">{ageError}</div>}
+        </div>
+      </div>
+
+      {/* === Таблица результатов === */}
+      {tableResult.length > 0 && <SimpleCitiesTable cities={tableResult} />}
+    </div>
   );
 }
