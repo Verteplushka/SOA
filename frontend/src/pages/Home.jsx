@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { searchCities, deleteCity } from "../api/api-service1";
+import { searchCities } from "../api/api-service1";
 import { useNavigate } from "react-router-dom";
 import CityRow from "../components/CityRow";
 
@@ -59,8 +59,21 @@ export default function Home() {
 
     try {
       const res = await searchCities(requestBody);
-      const cityData = res?.cityPageResponse?.cities?.cities || [];
-      setCities(Array.isArray(cityData) ? cityData : [cityData]);
+      const rawCities = res?.cityPageResponse?.cities?.city || [];
+      const normalized = Array.isArray(rawCities) ? rawCities : [rawCities];
+
+      const citiesWithLinks = normalized.map((city) => {
+        const linksArray = Array.isArray(city.links)
+          ? city.links
+          : [city.links];
+        const linksMap = {};
+        linksArray.forEach((l) => {
+          if (l?.rel && l?.href) linksMap[l.rel] = l.href;
+        });
+        return { ...city, _links: linksMap };
+      });
+
+      setCities(citiesWithLinks);
       const total = res?.cityPageResponse?.pagination?.totalPages;
       setTotalPages(total ?? 1);
     } catch (e) {
@@ -74,20 +87,27 @@ export default function Home() {
     fetchCities();
   }, [fetchCities]);
 
-  // 🔹 Удаление города
-  const handleDelete = async (id) => {
-    setDeleteError("");
+  const handleDelete = async (city) => {
     if (!window.confirm("Удалить этот город?")) return;
+
+    const deleteUrl = city._links?.delete;
+    if (!deleteUrl) {
+      alert("Ссылка для удаления не найдена");
+      return;
+    }
+
     try {
-      await deleteCity(id);
+      const res = await fetch(deleteUrl, { method: "DELETE" });
+      if (!res.ok) throw new Error(`Ошибка ${res.status}`);
       fetchCities();
     } catch (e) {
-      console.error("Ошибка при удалении города:", e);
-      setDeleteError("Ошибка при удалении города. Попробуйте позже.");
+      console.error(e);
+      alert("Ошибка при удалении города");
     }
   };
 
-  const handleEdit = (id) => navigate(`/edit/${id}`);
+  const handleEdit = (city) =>
+    navigate(`/edit/${city.id}`, { state: { city } });
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -122,8 +142,12 @@ export default function Home() {
 
       if (!numberRegex.test(value)) {
         err = isInteger ? "Введите целое число" : "Введите число";
-      } else if (value.length > (isInteger ? MAX_INT_LENGTH : MAX_DOUBLE_LENGTH)) {
-        err = `Максимум ${isInteger ? MAX_INT_LENGTH : MAX_DOUBLE_LENGTH} символов`;
+      } else if (
+        value.length > (isInteger ? MAX_INT_LENGTH : MAX_DOUBLE_LENGTH)
+      ) {
+        err = `Максимум ${
+          isInteger ? MAX_INT_LENGTH : MAX_DOUBLE_LENGTH
+        } символов`;
       } else {
         const num = Number(value);
 
@@ -173,219 +197,219 @@ export default function Home() {
   ];
 
   return (
-      <div className="container mt-4">
-        <h2>Список городов</h2>
+    <div className="container mt-4">
+      <h2>Список городов</h2>
 
-        {/* 🔹 Ошибки запросов */}
-        {fetchError && (
-            <div className="alert alert-danger mt-3" role="alert">
-              {fetchError}
-            </div>
-        )}
-        {deleteError && (
-            <div className="alert alert-warning mt-3" role="alert">
-              {deleteError}
-            </div>
-        )}
+      {/* 🔹 Ошибки запросов */}
+      {fetchError && (
+        <div className="alert alert-danger mt-3" role="alert">
+          {fetchError}
+        </div>
+      )}
+      {deleteError && (
+        <div className="alert alert-warning mt-3" role="alert">
+          {deleteError}
+        </div>
+      )}
 
-        <table className="table table-bordered table-striped mt-3">
-          <thead className="table-dark">
+      <table className="table table-bordered table-striped mt-3">
+        <thead className="table-dark">
           <tr>
             {columns.map((col) => (
-                <th key={col.field}>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <span>{col.label}</span>
-                    <button
-                        onClick={() => handleSort(col.field)}
-                        style={{
-                          border: "none",
-                          background: "transparent",
-                          color: "white",
-                          cursor: "pointer",
-                          padding: 0,
-                        }}
-                        title="Сортировать"
-                    >
-                      {sortField === col.field
-                          ? sortDirection === "ASC"
-                              ? "▲"
-                              : "▼"
-                          : "↕"}
-                    </button>
-                  </div>
+              <th key={col.field}>
+                <div className="d-flex justify-content-between align-items-center">
+                  <span>{col.label}</span>
+                  <button
+                    onClick={() => handleSort(col.field)}
+                    style={{
+                      border: "none",
+                      background: "transparent",
+                      color: "white",
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                    title="Сортировать"
+                  >
+                    {sortField === col.field
+                      ? sortDirection === "ASC"
+                        ? "▲"
+                        : "▼"
+                      : "↕"}
+                  </button>
+                </div>
 
-                  {/* 🔹 Поля фильтров */}
-                  {col.field === "government" ? (
-                      <select
-                          style={{ width: "100px" }}
-                          value={searchValues[col.field] || "ALL"}
-                          onChange={(e) =>
-                              handleSelectChange(
-                                  col.field,
-                                  e.target.value === "ALL" ? null : e.target.value
-                              )
-                          }
-                      >
-                        {governmentOptions.map((gov) => (
-                            <option key={gov} value={gov}>
-                              {gov}
-                            </option>
-                        ))}
-                      </select>
-                  ) : col.field === "name" ? (
-                      <>
-                        <input
-                            type="text"
-                            style={{ width: "100px" }}
-                            value={searchValues[col.field] || ""}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              const err = validateField("name", val);
-                              setErrors((prev) => ({ ...prev, name: err }));
-                              handleSelectChange(col.field, val);
-                            }}
-                            placeholder="Поиск"
-                        />
-                        {errors.name && (
-                            <div className="text-danger small">{errors.name}</div>
-                        )}
-                      </>
-                  ) : col.field === "establishmentDate" ? (
-                      <>
-                        <input
-                            type="date"
-                            style={{ width: "80px" }}
-                            value={searchValues[col.field]?.min || ""}
-                            onChange={(e) =>
-                                handleRangeChange(col.field, "min", e.target.value)
-                            }
-                        />
-                        <input
-                            type="date"
-                            style={{ width: "80px" }}
-                            value={searchValues[col.field]?.max || ""}
-                            onChange={(e) =>
-                                handleRangeChange(col.field, "max", e.target.value)
-                            }
-                        />
-                      </>
-                  ) : col.field === "id" ? null : (
-                      <>
-                        <input
-                            type="text"
-                            placeholder="min"
-                            style={{ width: "45px" }}
-                            value={searchValues[col.field]?.min || ""}
-                            onChange={(e) => {
-                              let val = e.target.value.replace(/[^0-9.]/g, ""); // только цифры и точка
-                              const parts = val.split(".");
-                              if (parts.length > 2)
-                                val = parts[0] + "." + parts.slice(1).join("");
-                              const err = validateField(col.field, val);
-                              setErrors((prev) => ({ ...prev, [col.field]: err }));
-                              handleRangeChange(col.field, "min", val);
-                            }}
-                        />
-                        <input
-                            type="text"
-                            placeholder="max"
-                            style={{ width: "45px" }}
-                            value={searchValues[col.field]?.max || ""}
-                            onChange={(e) => {
-                              let val = e.target.value.replace(/[^0-9.]/g, "");
-                              const parts = val.split(".");
-                              if (parts.length > 2)
-                                val = parts[0] + "." + parts.slice(1).join("");
-                              const err = validateField(col.field, val);
-                              setErrors((prev) => ({ ...prev, [col.field]: err }));
-                              handleRangeChange(col.field, "max", val);
-                            }}
-                        />
-                        {errors[col.field] && (
-                            <div className="text-danger small">
-                              {errors[col.field]}
-                            </div>
-                        )}
-                      </>
-                  )}
-                </th>
+                {/* 🔹 Поля фильтров */}
+                {col.field === "government" ? (
+                  <select
+                    style={{ width: "100px" }}
+                    value={searchValues[col.field] || "ALL"}
+                    onChange={(e) =>
+                      handleSelectChange(
+                        col.field,
+                        e.target.value === "ALL" ? null : e.target.value
+                      )
+                    }
+                  >
+                    {governmentOptions.map((gov) => (
+                      <option key={gov} value={gov}>
+                        {gov}
+                      </option>
+                    ))}
+                  </select>
+                ) : col.field === "name" ? (
+                  <>
+                    <input
+                      type="text"
+                      style={{ width: "100px" }}
+                      value={searchValues[col.field] || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const err = validateField("name", val);
+                        setErrors((prev) => ({ ...prev, name: err }));
+                        handleSelectChange(col.field, val);
+                      }}
+                      placeholder="Поиск"
+                    />
+                    {errors.name && (
+                      <div className="text-danger small">{errors.name}</div>
+                    )}
+                  </>
+                ) : col.field === "establishmentDate" ? (
+                  <>
+                    <input
+                      type="date"
+                      style={{ width: "80px" }}
+                      value={searchValues[col.field]?.min || ""}
+                      onChange={(e) =>
+                        handleRangeChange(col.field, "min", e.target.value)
+                      }
+                    />
+                    <input
+                      type="date"
+                      style={{ width: "80px" }}
+                      value={searchValues[col.field]?.max || ""}
+                      onChange={(e) =>
+                        handleRangeChange(col.field, "max", e.target.value)
+                      }
+                    />
+                  </>
+                ) : col.field === "id" ? null : (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="min"
+                      style={{ width: "45px" }}
+                      value={searchValues[col.field]?.min || ""}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/[^0-9.]/g, ""); // только цифры и точка
+                        const parts = val.split(".");
+                        if (parts.length > 2)
+                          val = parts[0] + "." + parts.slice(1).join("");
+                        const err = validateField(col.field, val);
+                        setErrors((prev) => ({ ...prev, [col.field]: err }));
+                        handleRangeChange(col.field, "min", val);
+                      }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="max"
+                      style={{ width: "45px" }}
+                      value={searchValues[col.field]?.max || ""}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/[^0-9.]/g, "");
+                        const parts = val.split(".");
+                        if (parts.length > 2)
+                          val = parts[0] + "." + parts.slice(1).join("");
+                        const err = validateField(col.field, val);
+                        setErrors((prev) => ({ ...prev, [col.field]: err }));
+                        handleRangeChange(col.field, "max", val);
+                      }}
+                    />
+                    {errors[col.field] && (
+                      <div className="text-danger small">
+                        {errors[col.field]}
+                      </div>
+                    )}
+                  </>
+                )}
+              </th>
             ))}
             <th>Действия</th>
           </tr>
-          </thead>
+        </thead>
 
-          <tbody>
+        <tbody>
           {cities.length === 0 ? (
-              <tr>
-                <td colSpan={columns.length + 1} className="text-center">
-                  Нет городов
-                </td>
-              </tr>
+            <tr>
+              <td colSpan={columns.length + 1} className="text-center">
+                Нет городов
+              </td>
+            </tr>
           ) : (
-              cities.map((city) => (
-                  <CityRow
-                      key={city.id}
-                      city={city}
-                      onDelete={handleDelete}
-                      onEdit={handleEdit}
-                  />
-              ))
+            cities.map((city) => (
+              <CityRow
+                key={city.id}
+                city={city}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+              />
+            ))
           )}
-          </tbody>
-        </table>
+        </tbody>
+      </table>
 
-        {/* 🔹 Пагинация */}
-        <div className="d-flex justify-content-between align-items-center mt-3">
-          <div>
-            <button
-                className="btn btn-sm btn-outline-primary me-1"
-                onClick={() => setPage(0)}
-                disabled={page === 0}
-            >
-              {"<<"}
-            </button>
-            <button
-                className="btn btn-sm btn-outline-primary me-1"
-                onClick={() => setPage((p) => Math.max(p - 1, 0))}
-                disabled={page === 0}
-            >
-              {"<"}
-            </button>
-            <span>
+      {/* 🔹 Пагинация */}
+      <div className="d-flex justify-content-between align-items-center mt-3">
+        <div>
+          <button
+            className="btn btn-sm btn-outline-primary me-1"
+            onClick={() => setPage(0)}
+            disabled={page === 0}
+          >
+            {"<<"}
+          </button>
+          <button
+            className="btn btn-sm btn-outline-primary me-1"
+            onClick={() => setPage((p) => Math.max(p - 1, 0))}
+            disabled={page === 0}
+          >
+            {"<"}
+          </button>
+          <span>
             Страница {page + 1} из {totalPages}
           </span>
-            <button
-                className="btn btn-sm btn-outline-primary ms-1"
-                onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
-                disabled={page >= totalPages - 1}
-            >
-              {">"}
-            </button>
-            <button
-                className="btn btn-sm btn-outline-primary ms-1"
-                onClick={() => setPage(totalPages - 1)}
-                disabled={page >= totalPages - 1}
-            >
-              {">>"}
-            </button>
-          </div>
+          <button
+            className="btn btn-sm btn-outline-primary ms-1"
+            onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+            disabled={page >= totalPages - 1}
+          >
+            {">"}
+          </button>
+          <button
+            className="btn btn-sm btn-outline-primary ms-1"
+            onClick={() => setPage(totalPages - 1)}
+            disabled={page >= totalPages - 1}
+          >
+            {">>"}
+          </button>
+        </div>
 
-          <div>
-            <label>
-              Записей на странице:{" "}
-              <select
-                  value={size}
-                  onChange={(e) => setSize(Number(e.target.value))}
-              >
-                {[5, 10, 20, 50, 100].map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                ))}
-              </select>
-            </label>
-          </div>
+        <div>
+          <label>
+            Записей на странице:{" "}
+            <select
+              value={size}
+              onChange={(e) => setSize(Number(e.target.value))}
+            >
+              {[5, 10, 20, 50, 100].map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       </div>
+    </div>
   );
 }
