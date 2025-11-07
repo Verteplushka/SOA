@@ -1,16 +1,21 @@
 package edu.itmo.soa.service1.dto.response;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import edu.itmo.soa.service1.entity.City;
 import lombok.Data;
+import org.springframework.hateoas.RepresentationModel;
 
 import java.util.List;
 
 @Data
 @JacksonXmlRootElement(localName = "cityPageResponse")
-public class CityPageResponse {
+public class CityPageResponse extends RepresentationModel<CityPageResponse> {
 
     private Pagination pagination;
+    @JacksonXmlElementWrapper(localName = "cities")
+    @JacksonXmlProperty(localName = "city")
     private List<City> cities;
 
     @Data

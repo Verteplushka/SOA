@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { addCity, getCity, updateCity } from "../api/api-service1";
+import { addCity, getCity, toXml } from "../api/api-service1";
 import { XMLParser } from "fast-xml-parser";
 
 const governmentOptions = ["DIARCHY", "KRITARCHY", "REPUBLIC"];
@@ -11,7 +11,7 @@ const MAX_INT_LENGTH = 9;
 const MAX_DOUBLE_LENGTH = 15;
 const MAX_NAME_LENGTH = 100;
 
-function CityForm() {
+function CityForm({ existingCity }) {
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -26,6 +26,8 @@ function CityForm() {
     government: governmentOptions[0],
     governor: { age: "0" },
   });
+
+  const editUrl = existingCity?._links?.update;
 
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState({});
@@ -47,24 +49,24 @@ function CityForm() {
   useEffect(() => {
     if (id) {
       getCity(id)
-          .then((res) => {
-            const data = res.City;
-            setCity({
-              name: data.name,
-              coordinates: {
-                x: data.coordinates.x,
-                y: data.coordinates.y,
-              },
-              area: data.area,
-              population: data.population,
-              metersAboveSeaLevel: data.metersAboveSeaLevel || 0,
-              establishmentDate: parseEstablishmentDate(data.establishmentDate),
-              populationDensity: data.populationDensity || 0,
-              government: data.government,
-              governor: { age: data.governor.age || 0 },
-            });
-          })
-          .catch(() => setError("Не удалось загрузить данные города"));
+        .then((res) => {
+          const data = res.City;
+          setCity({
+            name: data.name,
+            coordinates: {
+              x: data.coordinates.x,
+              y: data.coordinates.y,
+            },
+            area: data.area,
+            population: data.population,
+            metersAboveSeaLevel: data.metersAboveSeaLevel || 0,
+            establishmentDate: parseEstablishmentDate(data.establishmentDate),
+            populationDensity: data.populationDensity || 0,
+            government: data.government,
+            governor: { age: data.governor.age || 0 },
+          });
+        })
+        .catch(() => setError("Не удалось загрузить данные города"));
     }
   }, [id]);
 
@@ -99,7 +101,8 @@ function CityForm() {
         if (!isInt(value)) err = "Введите целое число";
         else if (value.length > MAX_INT_LENGTH)
           err = `Максимум ${MAX_INT_LENGTH} цифр`;
-        else if (Number(value) < 0) err = "Население не может быть отрицательным";
+        else if (Number(value) < 0)
+          err = "Население не может быть отрицательным";
         break;
 
       case "metersAboveSeaLevel":
@@ -129,7 +132,6 @@ function CityForm() {
       default:
         break;
     }
-
 
     setValidationErrors((prev) => ({ ...prev, [name]: err }));
     return err === "";
@@ -171,7 +173,9 @@ function CityForm() {
       "governor.age",
       "establishmentDate",
     ];
-    const allValid = fields.every((f) => validateField(f, f.includes(".") ? eval(`city.${f}`) : city[f]));
+    const allValid = fields.every((f) =>
+      validateField(f, f.includes(".") ? eval(`city.${f}`) : city[f])
+    );
 
     if (!allValid) {
       setError("Исправьте ошибки перед сохранением");
@@ -199,159 +203,175 @@ function CityForm() {
     };
 
     try {
-      if (id) await updateCity(id, cityToSend);
-      else await addCity(cityToSend);
+      if (editUrl) {
+        await fetch(editUrl, {
+          method: "PUT",
+          headers: { "Content-Type": "application/xml" },
+          body: toXml(cityToSend, "CityInput"),
+        });
+      } else {
+        await addCity(cityToSend);
+      }
       navigate("/");
     } catch (err) {
-      if (err.response && err.response.data) {
-        try {
-          const xmlData = parser.parse(err.response.data);
-          const message = xmlData.error?.message || "Неизвестная ошибка";
-          setError(message);
-        } catch {
-          setError("Ошибка при разборе ответа сервера");
-        }
-      } else {
-        setError(err.message || "Ошибка при сохранении города");
-      }
+      setError("Ошибка при сохранении города");
+      console.log(err);
     }
   };
 
   return (
-      <div className="container mt-4">
-        <h2 className="mb-4">{id ? "Редактировать город" : "Создать город"}</h2>
+    <div className="container mt-4">
+      <h2 className="mb-4">{id ? "Редактировать город" : "Создать город"}</h2>
 
-        {error && (
-            <div className="alert alert-danger" role="alert">
-              {error}
-            </div>
-        )}
+      {error && (
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="row g-3">
-            {/* Название */}
-            <div className="col-md-6">
-              <label className="form-label">Название города</label>
-              <input
-                  type="text"
-                  className={`form-control ${validationErrors.name ? "is-invalid" : ""}`}
-                  name="name"
-                  value={city.name}
-                  onChange={handleChange}
-                  required
-              />
-              {validationErrors.name && (
-                  <div className="invalid-feedback">{validationErrors.name}</div>
-              )}
-            </div>
-
-            {/* Координаты */}
-            {["x", "y"].map((axis) => (
-                <div className="col-md-3" key={axis}>
-                  <label className="form-label">Координата {axis.toUpperCase()}</label>
-                  <input
-                      type="text"
-                      className={`form-control ${validationErrors[`coordinates.${axis}`] ? "is-invalid" : ""}`}
-                      name={`coordinates.${axis}`}
-                      value={city.coordinates[axis]}
-                      onChange={handleChange}
-                      required
-                  />
-                  {validationErrors[`coordinates.${axis}`] && (
-                      <div className="invalid-feedback">
-                        {validationErrors[`coordinates.${axis}`]}
-                      </div>
-                  )}
-                </div>
-            ))}
-
-            {/* Числовые поля */}
-            {[
-              { label: "Площадь", name: "area" },
-              { label: "Население", name: "population" },
-              { label: "Высота над уровнем моря", name: "metersAboveSeaLevel" },
-              { label: "Плотность населения", name: "populationDensity" },
-            ].map((f) => (
-                <div className="col-md-4" key={f.name}>
-                  <label className="form-label">{f.label}</label>
-                  <input
-                      type="text"
-                      className={`form-control ${validationErrors[f.name] ? "is-invalid" : ""}`}
-                      name={f.name}
-                      value={city[f.name]}
-                      onChange={handleChange}
-                  />
-                  {validationErrors[f.name] && (
-                      <div className="invalid-feedback">{validationErrors[f.name]}</div>
-                  )}
-                </div>
-            ))}
-
-            {/* Дата основания */}
-            <div className="col-md-4">
-              <label className="form-label">Дата основания</label>
-              <input
-                  type="date"
-                  className={`form-control ${validationErrors.establishmentDate ? "is-invalid" : ""}`}
-                  name="establishmentDate"
-                  value={city.establishmentDate}
-                  onChange={handleChange}
-                  max={MAX_DATE}
-              />
-              {validationErrors.establishmentDate && (
-                  <div className="invalid-feedback">{validationErrors.establishmentDate}</div>
-              )}
-            </div>
-
-            {/* Форма правления */}
-            <div className="col-md-4">
-              <label className="form-label">Форма правления</label>
-              <select
-                  className="form-select"
-                  name="government"
-                  value={city.government}
-                  onChange={handleChange}
-                  required
-              >
-                {governmentOptions.map((gov) => (
-                    <option key={gov} value={gov}>
-                      {gov}
-                    </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Возраст губернатора */}
-            <div className="col-md-4">
-              <label className="form-label">Возраст губернатора</label>
-              <input
-                  type="text"
-                  className={`form-control ${validationErrors["governor.age"] ? "is-invalid" : ""}`}
-                  name="governor.age"
-                  value={city.governor.age}
-                  onChange={handleChange}
-                  required
-              />
-              {validationErrors["governor.age"] && (
-                  <div className="invalid-feedback">{validationErrors["governor.age"]}</div>
-              )}
-            </div>
+      <form onSubmit={handleSubmit}>
+        <div className="row g-3">
+          {/* Название */}
+          <div className="col-md-6">
+            <label className="form-label">Название города</label>
+            <input
+              type="text"
+              className={`form-control ${
+                validationErrors.name ? "is-invalid" : ""
+              }`}
+              name="name"
+              value={city.name}
+              onChange={handleChange}
+              required
+            />
+            {validationErrors.name && (
+              <div className="invalid-feedback">{validationErrors.name}</div>
+            )}
           </div>
 
-          <div className="mt-4">
-            <button type="submit" className="btn btn-primary me-2">
-              {id ? "Сохранить" : "Создать"}
-            </button>
-            <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => navigate("/")}
+          {/* Координаты */}
+          {["x", "y"].map((axis) => (
+            <div className="col-md-3" key={axis}>
+              <label className="form-label">
+                Координата {axis.toUpperCase()}
+              </label>
+              <input
+                type="text"
+                className={`form-control ${
+                  validationErrors[`coordinates.${axis}`] ? "is-invalid" : ""
+                }`}
+                name={`coordinates.${axis}`}
+                value={city.coordinates[axis]}
+                onChange={handleChange}
+                required
+              />
+              {validationErrors[`coordinates.${axis}`] && (
+                <div className="invalid-feedback">
+                  {validationErrors[`coordinates.${axis}`]}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Числовые поля */}
+          {[
+            { label: "Площадь", name: "area" },
+            { label: "Население", name: "population" },
+            { label: "Высота над уровнем моря", name: "metersAboveSeaLevel" },
+            { label: "Плотность населения", name: "populationDensity" },
+          ].map((f) => (
+            <div className="col-md-4" key={f.name}>
+              <label className="form-label">{f.label}</label>
+              <input
+                type="text"
+                className={`form-control ${
+                  validationErrors[f.name] ? "is-invalid" : ""
+                }`}
+                name={f.name}
+                value={city[f.name]}
+                onChange={handleChange}
+              />
+              {validationErrors[f.name] && (
+                <div className="invalid-feedback">
+                  {validationErrors[f.name]}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Дата основания */}
+          <div className="col-md-4">
+            <label className="form-label">Дата основания</label>
+            <input
+              type="date"
+              className={`form-control ${
+                validationErrors.establishmentDate ? "is-invalid" : ""
+              }`}
+              name="establishmentDate"
+              value={city.establishmentDate}
+              onChange={handleChange}
+              max={MAX_DATE}
+            />
+            {validationErrors.establishmentDate && (
+              <div className="invalid-feedback">
+                {validationErrors.establishmentDate}
+              </div>
+            )}
+          </div>
+
+          {/* Форма правления */}
+          <div className="col-md-4">
+            <label className="form-label">Форма правления</label>
+            <select
+              className="form-select"
+              name="government"
+              value={city.government}
+              onChange={handleChange}
+              required
             >
-              Отмена
-            </button>
+              {governmentOptions.map((gov) => (
+                <option key={gov} value={gov}>
+                  {gov}
+                </option>
+              ))}
+            </select>
           </div>
-        </form>
-      </div>
+
+          {/* Возраст губернатора */}
+          <div className="col-md-4">
+            <label className="form-label">Возраст губернатора</label>
+            <input
+              type="text"
+              className={`form-control ${
+                validationErrors["governor.age"] ? "is-invalid" : ""
+              }`}
+              name="governor.age"
+              value={city.governor.age}
+              onChange={handleChange}
+              required
+            />
+            {validationErrors["governor.age"] && (
+              <div className="invalid-feedback">
+                {validationErrors["governor.age"]}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <button type="submit" className="btn btn-primary me-2">
+            {id ? "Сохранить" : "Создать"}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => navigate("/")}
+          >
+            Отмена
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
 
