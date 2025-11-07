@@ -94,15 +94,15 @@ function CityForm({ existingCity }) {
         if (!isInt(value)) err = "Введите целое число";
         else if (value.length > MAX_INT_LENGTH)
           err = `Максимум ${MAX_INT_LENGTH} цифр`;
-        else if (Number(value) < 0) err = "Площадь не может быть отрицательной";
+        else if (Number(value) <= 0) err = "Площадь должна быть положительной";
         break;
 
       case "population":
         if (!isInt(value)) err = "Введите целое число";
         else if (value.length > MAX_INT_LENGTH)
           err = `Максимум ${MAX_INT_LENGTH} цифр`;
-        else if (Number(value) < 0)
-          err = "Население не может быть отрицательным";
+        else if (Number(value) <= 0)
+          err = "Население должно быть положительным";
         break;
 
       case "metersAboveSeaLevel":
@@ -114,8 +114,8 @@ function CityForm({ existingCity }) {
       case "populationDensity":
         if (!isFloat(value)) err = "Введите корректное число";
         else if (value.length > 10) err = "Максимум 10 символов";
-        else if (Number(value) < 0)
-          err = "Плотность населения не может быть отрицательной";
+        else if (Number(value) <= 0)
+          err = "Плотность населения должна быть положительной";
         break;
 
       case "governor.age":
