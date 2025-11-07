@@ -47,7 +47,7 @@ export default function Home() {
 
     try {
       const res = await searchCities(requestBody);
-      const cityData = res?.cityPageResponse?.cities?.cities || [];
+      const cityData = res?.cityPageResponse?.cities?.city || [];
       setCities(Array.isArray(cityData) ? cityData : [cityData]);
 
       const total = res?.cityPageResponse?.pagination?.totalPages;

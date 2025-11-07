@@ -8,11 +8,8 @@ import java.util.List;
 @XmlRootElement(name = "cityPageResponse")
 @XmlAccessorType(XmlAccessType.FIELD)
 @Data
-public class СityPageResponse {
-
-    //@XmlElement(name = "cities")
-    @XmlElementWrapper(name = "cities") // outer <cities>
-    @XmlElement(name = "cities")        // inner <cities>
+public class CityPageResponse {
+    @XmlElementWrapper(name = "cities")
+    @XmlElement(name = "city")
     private List<City> cities;
-
 }
