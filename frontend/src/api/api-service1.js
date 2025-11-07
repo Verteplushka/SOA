@@ -2,7 +2,7 @@ import axios from "axios";
 import { XMLParser, XMLBuilder } from "fast-xml-parser";
 
 const BASE_URL =
-  import.meta.env.VITE_API_BASE || "https://localhost:8443/Service1";
+  import.meta.env.VITE_API_BASE || "https://158.160.204.193:8443/Service1";
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,

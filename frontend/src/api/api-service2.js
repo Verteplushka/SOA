@@ -3,7 +3,7 @@ import { XMLParser, XMLBuilder } from "fast-xml-parser";
 
 const BASE_URL =
   import.meta.env.VITE_GENOCIDE_API_BASE ||
-  "https://127.0.0.1:8544/demo-1.0-SNAPSHOT/genocide";
+  "https://158.160.204.193:8444/demo-1.0-SNAPSHOT/genocide";
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
