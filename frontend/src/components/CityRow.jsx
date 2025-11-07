@@ -30,13 +30,13 @@ export default function CityRow({ city, onDelete, onEdit }) {
       <td>
         <button
           className="btn btn-sm btn-primary me-1"
-          onClick={() => onEdit(city.id)}
+          onClick={() => onEdit(city)}
         >
           Изменить
         </button>
         <button
           className="btn btn-sm btn-danger"
-          onClick={() => onDelete(city.id)}
+          onClick={() => onDelete(city)}
         >
           Удалить
         </button>

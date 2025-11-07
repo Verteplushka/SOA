@@ -8,3 +8,4 @@ jetty*
 !**/src/main/**/target/
 !**/src/test/**/target/
 keystore*
+commands.txt

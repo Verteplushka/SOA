@@ -11,7 +11,7 @@ import java.util.List;
 @ApplicationScoped
 public class CityServiceClient {
 
-    private final String BASE_URL = "http://localhost:8080/Service1/cities"; // URL первого сервиса (Spring Jetty)
+    private final String BASE_URL = "https://localhost:8443/Service1/cities"; // URL первого сервиса (Spring Jetty)
     private final Client client;
 
     public CityServiceClient() {
@@ -65,9 +65,9 @@ public class CityServiceClient {
             Invocation.Builder requestBuilder = target.request(MediaType.APPLICATION_XML);
 
             // Выполняем POST-запрос, передаем объект запроса и получаем ответ в виде cityPageResponse
-            cityPageResponse response = requestBuilder.post(
+            CityPageResponse response = requestBuilder.post(
                     Entity.entity(request, MediaType.APPLICATION_XML),
-                    cityPageResponse.class
+                    CityPageResponse.class
             );
 
             // Возвращаем список городов из ответа

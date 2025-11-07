@@ -19,7 +19,7 @@ const builder = new XMLBuilder({
   format: true,
 });
 
-function toXml(obj, rootName = null) {
+export function toXml(obj, rootName = null) {
   if (rootName) {
     const w = {};
     w[rootName] = obj;
@@ -52,17 +52,6 @@ export async function addCity(cityInput) {
 export async function getCity(id) {
   const res = await axiosInstance.get(`/cities/${id}`);
   return parseXml(res.data);
-}
-
-export async function updateCity(id, cityInput) {
-  const xml = toXml(cityInput, "CityInput");
-  const res = await axiosInstance.put(`/cities/${id}`, xml);
-  return parseXml(res.data);
-}
-
-export async function deleteCity(id) {
-  const res = await axiosInstance.delete(`/cities/${id}`);
-  return res.status;
 }
 
 export async function deleteByMeters(meters) {

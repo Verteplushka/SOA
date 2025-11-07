@@ -1,6 +1,5 @@
 package edu.itmo.soa.service1.dto.request;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import edu.itmo.soa.service1.entity.Government;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

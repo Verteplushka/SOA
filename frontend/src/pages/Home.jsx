@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { searchCities, deleteCity } from "../api/api-service1";
+import { searchCities } from "../api/api-service1";
 import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
 import CityRow from "../components/CityRow";
@@ -47,8 +47,21 @@ export default function Home() {
 
     try {
       const res = await searchCities(requestBody);
-      const cityData = res?.cityPageResponse?.cities?.city || [];
-      setCities(Array.isArray(cityData) ? cityData : [cityData]);
+      const rawCities = res?.cityPageResponse?.cities?.city || [];
+      const normalized = Array.isArray(rawCities) ? rawCities : [rawCities];
+
+      const citiesWithLinks = normalized.map((city) => {
+        const linksArray = Array.isArray(city.links)
+          ? city.links
+          : [city.links];
+        const linksMap = {};
+        linksArray.forEach((l) => {
+          if (l?.rel && l?.href) linksMap[l.rel] = l.href;
+        });
+        return { ...city, _links: linksMap };
+      });
+
+      setCities(citiesWithLinks);
 
       const total = res?.cityPageResponse?.pagination?.totalPages;
       setTotalPages(total ?? 1);
@@ -71,17 +84,33 @@ export default function Home() {
     fetchCities();
   }, [fetchCities]);
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (city) => {
     if (!window.confirm("Удалить этот город?")) return;
+
+    const deleteUrl = city._links?.delete;
+    if (!deleteUrl) {
+      alert("Ссылка для удаления не найдена");
+      return;
+    }
+
     try {
-      await deleteCity(id);
+      const res = await fetch(deleteUrl, { method: "DELETE" });
+      if (!res.ok) throw new Error(`Ошибка ${res.status}`);
       fetchCities();
-    } catch {
+    } catch (e) {
+      console.error(e);
       alert("Ошибка при удалении города");
     }
   };
 
-  const handleEdit = (id) => navigate(`/edit/${id}`);
+  const handleEdit = (city) => {
+    const editUrl = city._links?.update; // HATEOAS-ссылка на обновление
+    if (!editUrl) {
+      alert("Ссылка для обновления не найдена");
+      return;
+    }
+    navigate(`/edit/${city.id}`, { state: { city, editUrl } });
+  };
 
   const handleSort = (field) => {
     if (sortField === field) {

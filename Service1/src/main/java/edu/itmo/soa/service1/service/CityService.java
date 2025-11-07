@@ -2,6 +2,7 @@ package edu.itmo.soa.service1.service;
 
 import edu.itmo.soa.service1.dto.request.CityInput;
 import edu.itmo.soa.service1.dto.request.CitySearchRequest;
+import edu.itmo.soa.service1.dto.response.CitiesResponse;
 import edu.itmo.soa.service1.dto.response.CityPageResponse;
 import edu.itmo.soa.service1.entity.City;
 import edu.itmo.soa.service1.entity.Coordinates;
@@ -12,14 +13,12 @@ import edu.itmo.soa.service1.exception.CityNotFoundException;
 import edu.itmo.soa.service1.exception.InvalidCityDataException;
 import edu.itmo.soa.service1.repo.CityRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -252,18 +251,18 @@ public class CityService {
         cityRepository.delete(cityList.get(0));
     }
 
-    public List<City> findByNamePrefix(String prefix) {
+    public CitiesResponse findByNamePrefix(String prefix) {
         if (prefix == null || prefix.isEmpty()) {
             throw new IllegalArgumentException("Параметр prefix не должен быть пустой");
         }
-        return cityRepository.findByNameStartingWith(prefix);
+        return new CitiesResponse(cityRepository.findByNameStartingWith(prefix));
     }
 
-    public List<City> getCitiesByGovernorAge(int age) {
+    public CitiesResponse getCitiesByGovernorAge(int age) {
         if (age <= 0) {
             throw new IllegalArgumentException("Параметр age должен быть больше 0");
         }
-        return cityRepository.findByGovernorAgeGreaterThan(age);
+        return new CitiesResponse(cityRepository.findByGovernorAgeGreaterThan(age));
     }
 
     private void validateCityInput(CityInput input) {
