@@ -6,13 +6,18 @@ import {
 } from "../api/api-service1";
 import SimpleCitiesTable from "../components/SimpleCitiesTable";
 
+// Функция разбора ошибки из XML
 function parseErrorMessage(xmlString) {
   try {
     const parser = new DOMParser();
     const xml = parser.parseFromString(xmlString, "text/xml");
     const errorNode = xml.getElementsByTagName("error")[0];
     const messageNode = xml.getElementsByTagName("message")[0];
-    if (errorNode && errorNode.textContent === "NOT_FOUND") return "Город с заданным именем не найден";
+
+    if (errorNode && errorNode.textContent === "NOT_FOUND") {
+      return "Город с заданным именем не найден";
+    }
+
     if (messageNode) return messageNode.textContent;
   } catch (e) {
     console.error("Ошибка парсинга XML:", e);
@@ -72,8 +77,8 @@ export default function SpecialQueries() {
       return;
     }
     try {
-      const res = await deleteByMeters(meters);
-      setDeleteResult(`Объект успешно удален!`);
+      await deleteByMeters(meters);
+      setDeleteResult("Объект успешно удален!");
     } catch (e) {
       const msg = e.response?.data
           ? parseErrorMessage(e.response.data)
@@ -89,6 +94,7 @@ export default function SpecialQueries() {
       setPrefixError("Исправьте ошибки перед поиском");
       return;
     }
+
     try {
       const res = await byNamePrefix(prefix);
       // Если сервер вернул ошибку NOT_FOUND
@@ -97,7 +103,14 @@ export default function SpecialQueries() {
         setTableResult([]);
         return;
       }
-      const cities = res?.ArrayList?.item || [];
+
+      const cities = res?.citiesResponse?.cities?.city || [];
+      if (!cities || (Array.isArray(cities) && cities.length === 0)) {
+        setPrefixError("Город с заданным именем не найден");
+        setTableResult([]);
+        return;
+      }
+
       setTableResult(Array.isArray(cities) ? cities : [cities]);
     } catch (e) {
       const msg = e.response?.data
@@ -116,7 +129,7 @@ export default function SpecialQueries() {
     }
     try {
       const res = await byGovernorAge(age);
-      const cities = res?.ArrayList?.item || [];
+      const cities = res?.citiesResponse?.cities?.city || [];
       setTableResult(Array.isArray(cities) ? cities : [cities]);
     } catch (e) {
       const msg = e.response?.data
@@ -147,7 +160,7 @@ export default function SpecialQueries() {
       <div className="container my-4">
         <h2 className="mb-4">Прочие эндпоинты</h2>
 
-        {/* === Удаление по meters === */}
+        {/* Удаление по meters */}
         <div className="card mb-4 shadow-sm">
           <div className="card-body">
             <h3 className="card-title mb-3">Удалить по метрам над уровнем моря</h3>
@@ -171,7 +184,7 @@ export default function SpecialQueries() {
           </div>
         </div>
 
-        {/* === Поиск по имени === */}
+        {/* Поиск по имени */}
         <div className="card mb-4 shadow-sm">
           <div className="card-body">
             <h3 className="card-title mb-3">Поиск по имени</h3>
@@ -197,7 +210,7 @@ export default function SpecialQueries() {
           </div>
         </div>
 
-        {/* === Поиск по возрасту губернатора === */}
+        {/* Поиск по возрасту губернатора */}
         <div className="card mb-4 shadow-sm">
           <div className="card-body">
             <h3 className="card-title mb-3">
@@ -222,7 +235,7 @@ export default function SpecialQueries() {
           </div>
         </div>
 
-        {/* === Таблица результатов === */}
+        {/* Таблица результатов */}
         {tableResult.length > 0 && <SimpleCitiesTable cities={tableResult} />}
       </div>
   );
