@@ -18,9 +18,6 @@ public class GenocideResource {
     @Inject
     private CityServiceClient cityServiceClient;
 
-    // -------------------------------
-    // Получение города по ID
-    // -------------------------------
     @GET
     @Path("/city/{id}")
     public Response getCityById(@PathParam("id") int id) {
@@ -28,26 +25,20 @@ public class GenocideResource {
             City city = cityServiceClient.getCity(id);
 
             if (city == null) {
-                // Если город не найден
                 return Response.status(Response.Status.NOT_FOUND)
                         .entity(new ErrorResponse("NOT_FOUND", "Город с id " + id + " не найден"))
                         .build();
             }
 
-            // Успешный ответ с городом
             return Response.ok(city).build();
 
         } catch (Exception e) {
-            // В случае ошибки сервера
             return Response.serverError()
                     .entity(new ErrorResponse("INTERNAL_SERVER_ERROR", e.getMessage()))
                     .build();
         }
     }
 
-    // -------------------------------
-    // Подсчет суммарного населения 3 городов
-    // -------------------------------
     @POST
     @Path("/count/{id1}/{id2}/{id3}")
     public Response countPopulation(
@@ -56,7 +47,6 @@ public class GenocideResource {
             @PathParam("id3") int id3) {
 
         try {
-            // Получаем города по ID
             City c1 = cityServiceClient.getCity(id1);
             City c2 = cityServiceClient.getCity(id2);
             City c3 = cityServiceClient.getCity(id3);
@@ -67,7 +57,6 @@ public class GenocideResource {
                         .build();
             }
 
-            // Суммируем население
             long totalPopulation = c1.getPopulation() + c2.getPopulation() + c3.getPopulation();
 
             PopulationResponse result = new PopulationResponse();
@@ -82,14 +71,10 @@ public class GenocideResource {
         }
     }
 
-    // -------------------------------
-    // Переселение жителей в город с наименьшей плотностью
-    // -------------------------------
     @POST
     @Path("/move-to-poorest/{id}")
     public Response moveToPoorest(@PathParam("id") int sourceId) {
         try {
-            // Получаем все города
             List<City> cities = cityServiceClient.getAllCities();
 
             if (cities.isEmpty()) {
@@ -98,7 +83,6 @@ public class GenocideResource {
                         .build();
             }
 
-            // Получаем исходный город
             City source = cityServiceClient.getCity(sourceId);
             if (source == null) {
                 return Response.status(Response.Status.NOT_FOUND)
@@ -106,7 +90,6 @@ public class GenocideResource {
                         .build();
             }
 
-            // Ищем город с минимальной плотностью населения, исключая исходный город
             City poorest = cities.stream()
                     .filter(c -> c.getId() != source.getId())
                     .min(Comparator.comparingDouble(City::getPopulationDensity))
@@ -118,15 +101,12 @@ public class GenocideResource {
                         .build();
             }
 
-            // Переселение жителей
             poorest.setPopulation(poorest.getPopulation() + source.getPopulation());
             source.setPopulation(0);
 
-            // Обновляем данные городов через сервис
             cityServiceClient.updateCity(poorest);
             cityServiceClient.updateCity(source);
 
-            // Формируем ответ
             RelocationResponse response = new RelocationResponse();
             response.setSourceCity(source);
             response.setTargetCity(poorest);
