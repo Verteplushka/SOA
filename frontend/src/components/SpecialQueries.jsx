@@ -33,6 +33,7 @@ export default function SpecialQueries() {
   const [validationErrors, setValidationErrors] = useState({});
   const [tableResult, setTableResult] = useState([]);
 
+  // === Валидации ===
   const validateMeters = (value) => {
     let err = "";
     if (!/^-?\d+$/.test(value)) err = "Введите целое число";
@@ -60,6 +61,7 @@ export default function SpecialQueries() {
     return !err;
   };
 
+  // === Обработчики ===
   const handleDelete = async () => {
     setDeleteResult(null);
     setDeleteError(null);
@@ -116,6 +118,25 @@ export default function SpecialQueries() {
     }
   };
 
+  // === Ограничение ввода ===
+  const handleMetersInput = (e) => {
+    const value = e.target.value;
+    // Разрешаем цифры и минус в начале
+    if (/^-?\d*$/.test(value)) {
+      setMeters(value);
+      validateMeters(value);
+    }
+  };
+
+  const handleAgeInput = (e) => {
+    const value = e.target.value;
+    // Только цифры
+    if (/^\d*$/.test(value)) {
+      setAge(value);
+      validateAge(value);
+    }
+  };
+
   return (
       <div className="container my-4">
         <h2 className="mb-4">Прочие эндпоинты</h2>
@@ -127,24 +148,17 @@ export default function SpecialQueries() {
             <div className="input-group mb-2">
               <input
                   type="text"
-                  className={`form-control ${
-                      validationErrors.meters ? "is-invalid" : ""
-                  }`}
+                  className={`form-control ${validationErrors.meters ? "is-invalid" : ""}`}
                   placeholder="meters"
                   value={meters}
-                  onChange={(e) => {
-                    setMeters(e.target.value);
-                    validateMeters(e.target.value);
-                  }}
+                  onChange={handleMetersInput}
               />
               <button className="btn btn-danger" onClick={handleDelete}>
                 Удалить
               </button>
             </div>
             {validationErrors.meters && (
-                <div className="invalid-feedback d-block">
-                  {validationErrors.meters}
-                </div>
+                <div className="invalid-feedback d-block">{validationErrors.meters}</div>
             )}
             {deleteResult && <div className="text-success">{deleteResult}</div>}
             {deleteError && <div className="text-danger">{deleteError}</div>}
@@ -158,9 +172,7 @@ export default function SpecialQueries() {
             <div className="input-group mb-2">
               <input
                   type="text"
-                  className={`form-control ${
-                      validationErrors.prefix ? "is-invalid" : ""
-                  }`}
+                  className={`form-control ${validationErrors.prefix ? "is-invalid" : ""}`}
                   placeholder="prefix"
                   value={prefix}
                   onChange={(e) => {
@@ -173,9 +185,7 @@ export default function SpecialQueries() {
               </button>
             </div>
             {validationErrors.prefix && (
-                <div className="invalid-feedback d-block">
-                  {validationErrors.prefix}
-                </div>
+                <div className="invalid-feedback d-block">{validationErrors.prefix}</div>
             )}
             {prefixError && <div className="text-danger">{prefixError}</div>}
           </div>
@@ -190,24 +200,17 @@ export default function SpecialQueries() {
             <div className="input-group mb-2">
               <input
                   type="text"
-                  className={`form-control ${
-                      validationErrors.age ? "is-invalid" : ""
-                  }`}
+                  className={`form-control ${validationErrors.age ? "is-invalid" : ""}`}
                   placeholder="age"
                   value={age}
-                  onChange={(e) => {
-                    setAge(e.target.value);
-                    validateAge(e.target.value);
-                  }}
+                  onChange={handleAgeInput}
               />
               <button className="btn btn-warning" onClick={handleByAge}>
                 Найти
               </button>
             </div>
             {validationErrors.age && (
-                <div className="invalid-feedback d-block">
-                  {validationErrors.age}
-                </div>
+                <div className="invalid-feedback d-block">{validationErrors.age}</div>
             )}
             {ageError && <div className="text-danger">{ageError}</div>}
           </div>

@@ -88,8 +88,6 @@ export default function Home() {
   }, [fetchCities]);
 
   const handleDelete = async (city) => {
-    if (!window.confirm("Удалить этот город?")) return;
-
     const deleteUrl = city._links?.delete;
     if (!deleteUrl) {
       alert("Ссылка для удаления не найдена");
@@ -105,6 +103,7 @@ export default function Home() {
       alert("Ошибка при удалении города");
     }
   };
+
 
   const handleEdit = (city) =>
     navigate(`/edit/${city.id}`, { state: { city } });
