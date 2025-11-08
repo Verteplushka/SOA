@@ -11,7 +11,7 @@ import java.util.List;
 @ApplicationScoped
 public class CityServiceClient {
 
-    private final String BASE_URL = "https://localhost:8443/Service1/cities"; // URL первого сервиса (Spring Jetty)
+    private final String BASE_URL = "https://158.160.204.193:8443/Service1/cities"; // URL первого сервиса (Spring Jetty)
     private final Client client;
 
     public CityServiceClient() {
