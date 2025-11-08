@@ -56,11 +56,25 @@ export default function Genocide() {
     }
   };
 
+  // 🔹 Запрещаем ввод нечисловых символов
+  const handleNumericKeyDown = (e) => {
+    const allowedKeys = [
+      "Backspace",
+      "Delete",
+      "ArrowLeft",
+      "ArrowRight",
+      "Tab",
+    ];
+
+    if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   const handleCount = async () => {
     setTotalPopulation(null);
     setCountError(null);
 
-    // Проверка на ошибки валидации
     const valid = Object.keys(ids).every((k) => validateInput(k, ids[k]));
     if (!valid) {
       setCountError("Проверьте правильность введённых ID");
@@ -112,6 +126,7 @@ export default function Genocide() {
       <div className="container my-4">
         <h2 className="mb-4">Геноцидные эндпоинты</h2>
 
+        {/* Блок подсчёта населения */}
         <div className="card mb-4 shadow-sm">
           <div className="card-body">
             <h3 className="card-title mb-3">Суммарное население 3 городов</h3>
@@ -126,6 +141,7 @@ export default function Genocide() {
                         placeholder={k.toUpperCase()}
                         value={ids[k]}
                         onChange={(e) => handleIdChange(k, e.target.value)}
+                        onKeyDown={handleNumericKeyDown}
                     />
                     {validationErrors[k] && (
                         <div className="invalid-feedback">
@@ -152,6 +168,7 @@ export default function Genocide() {
           </div>
         </div>
 
+        {/* Блок переселения */}
         <div className="card mb-4 shadow-sm">
           <div className="card-body">
             <h3 className="card-title mb-3">
@@ -169,6 +186,7 @@ export default function Genocide() {
                     setMoveId(e.target.value);
                     validateInput("moveId", e.target.value);
                   }}
+                  onKeyDown={handleNumericKeyDown}
               />
               <button className="btn btn-warning" onClick={handleMove}>
                 Переселить
