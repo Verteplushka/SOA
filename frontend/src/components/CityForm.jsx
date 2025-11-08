@@ -50,24 +50,24 @@ function CityForm({ existingCity }) {
   useEffect(() => {
     if (id) {
       getCity(id)
-          .then((res) => {
-            const data = res.City;
-            setCity({
-              name: data.name,
-              coordinates: {
-                x: data.coordinates.x,
-                y: data.coordinates.y,
-              },
-              area: data.area,
-              population: data.population,
-              metersAboveSeaLevel: data.metersAboveSeaLevel || 0,
-              establishmentDate: parseEstablishmentDate(data.establishmentDate),
-              populationDensity: data.populationDensity || 0,
-              government: data.government,
-              governor: { age: data.governor.age || 0 },
-            });
-          })
-          .catch(() => setError("Не удалось загрузить данные города"));
+        .then((res) => {
+          const data = res.City;
+          setCity({
+            name: data.name,
+            coordinates: {
+              x: data.coordinates.x,
+              y: data.coordinates.y,
+            },
+            area: data.area,
+            population: data.population,
+            metersAboveSeaLevel: data.metersAboveSeaLevel || 0,
+            establishmentDate: parseEstablishmentDate(data.establishmentDate),
+            populationDensity: data.populationDensity || 0,
+            government: data.government,
+            governor: { age: data.governor.age || 0 },
+          });
+        })
+        .catch(() => setError("Не удалось загрузить данные города"));
     }
   }, [id]);
 
@@ -89,7 +89,7 @@ function CityForm({ existingCity }) {
         if (!isFloat(value)) {
           err = "Введите корректное число";
         } else {
-          const [intPart, decPart] = value.split(".");
+          const [intPart, decPart] = String(value).split(".");
           if ((intPart?.replace("-", "").length || 0) > MAX_DOUBLE_INT) {
             err = `Целая часть не более ${MAX_DOUBLE_INT} цифр`;
           } else if ((decPart?.length || 0) > MAX_DOUBLE_DEC) {
@@ -109,9 +109,17 @@ function CityForm({ existingCity }) {
         if (!isInt(value)) err = "Введите целое число";
         else if (value.length > MAX_INT_LENGTH)
           err = `Максимум ${MAX_INT_LENGTH} цифр`;
-        else if ((name === "area" || name === "population") && Number(value) <= 0)
-          err = `${name === "area" ? "Площадь" : "Население"} должно быть положительным`;
-        else if (name === "governor.age" && (Number(value) < 18 || Number(value) >= 99))
+        else if (
+          (name === "area" || name === "population") &&
+          Number(value) <= 0
+        )
+          err = `${
+            name === "area" ? "Площадь" : "Население"
+          } должно быть положительным`;
+        else if (
+          name === "governor.age" &&
+          (Number(value) < 18 || Number(value) >= 99)
+        )
           err = "Возраст должен быть от 18 до 99";
         break;
 
@@ -150,17 +158,30 @@ function CityForm({ existingCity }) {
 
   // 🔹 Блокировка нечисловых символов
   const handleNumericKeyDown = (e, isFloatField = false) => {
-    const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"];
+    const allowedKeys = [
+      "Backspace",
+      "Delete",
+      "ArrowLeft",
+      "ArrowRight",
+      "Tab",
+    ];
     if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
       // Для float полей разрешаем точку и минус
-      if (!(isFloatField && (e.key === "." || (e.key === "-" && e.target.selectionStart === 0)))) {
+      if (
+        !(
+          isFloatField &&
+          (e.key === "." || (e.key === "-" && e.target.selectionStart === 0))
+        )
+      ) {
         e.preventDefault();
       }
     }
     // Для float поля запрещаем вторую точку
-    if (isFloatField && e.key === "." && e.target.value.includes(".")) e.preventDefault();
+    if (isFloatField && e.key === "." && e.target.value.includes("."))
+      e.preventDefault();
     // Для float поля минус только в начале
-    if (isFloatField && e.key === "-" && e.target.selectionStart !== 0) e.preventDefault();
+    if (isFloatField && e.key === "-" && e.target.selectionStart !== 0)
+      e.preventDefault();
   };
 
   const handleSubmit = async (e) => {
@@ -179,7 +200,7 @@ function CityForm({ existingCity }) {
       "establishmentDate",
     ];
     const allValid = fields.every((f) =>
-        validateField(f, f.includes(".") ? eval(`city.${f}`) : city[f])
+      validateField(f, f.includes(".") ? eval(`city.${f}`) : city[f])
     );
 
     if (!allValid) {
@@ -225,123 +246,165 @@ function CityForm({ existingCity }) {
   };
 
   return (
-      <div className="container mt-4">
-        <h2 className="mb-4">{id ? "Редактировать город" : "Создать город"}</h2>
+    <div className="container mt-4">
+      <h2 className="mb-4">{id ? "Редактировать город" : "Создать город"}</h2>
 
-        {error && (
-            <div className="alert alert-danger" role="alert">
-              {error}
-            </div>
-        )}
+      {error && (
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="row g-3">
-            {/* Название */}
-            <div className="col-md-6">
-              <label className="form-label">Название города</label>
-              <input
-                  type="text"
-                  className={`form-control ${validationErrors.name ? "is-invalid" : ""}`}
-                  name="name"
-                  value={city.name}
-                  onChange={handleChange}
-                  required
-              />
-              {validationErrors.name && <div className="invalid-feedback">{validationErrors.name}</div>}
-            </div>
-
-            {/* Координаты */}
-            {["x", "y"].map((axis) => (
-                <div className="col-md-3" key={axis}>
-                  <label className="form-label">Координата {axis.toUpperCase()}</label>
-                  <input
-                      type="text"
-                      className={`form-control ${validationErrors[`coordinates.${axis}`] ? "is-invalid" : ""}`}
-                      name={`coordinates.${axis}`}
-                      value={city.coordinates[axis]}
-                      onChange={handleChange}
-                      onKeyDown={(e) => handleNumericKeyDown(e, true)}
-                      required
-                  />
-                  {validationErrors[`coordinates.${axis}`] && (
-                      <div className="invalid-feedback">{validationErrors[`coordinates.${axis}`]}</div>
-                  )}
-                </div>
-            ))}
-
-            {/* Остальные числовые поля */}
-            {[
-              { label: "Площадь", name: "area" },
-              { label: "Население", name: "population" },
-              { label: "Высота над уровнем моря", name: "metersAboveSeaLevel" },
-              { label: "Плотность населения", name: "populationDensity", float: true },
-            ].map((f) => (
-                <div className="col-md-4" key={f.name}>
-                  <label className="form-label">{f.label}</label>
-                  <input
-                      type="text"
-                      className={`form-control ${validationErrors[f.name] ? "is-invalid" : ""}`}
-                      name={f.name}
-                      value={city[f.name]}
-                      onChange={handleChange}
-                      onKeyDown={(e) => handleNumericKeyDown(e, !!f.float)}
-                  />
-                  {validationErrors[f.name] && (
-                      <div className="invalid-feedback">{validationErrors[f.name]}</div>
-                  )}
-                </div>
-            ))}
-
-            {/* Дата основания */}
-            <div className="col-md-4">
-              <label className="form-label">Дата основания</label>
-              <input
-                  type="date"
-                  className={`form-control ${validationErrors.establishmentDate ? "is-invalid" : ""}`}
-                  name="establishmentDate"
-                  value={city.establishmentDate}
-                  onChange={handleChange}
-                  max={MAX_DATE}
-              />
-              {validationErrors.establishmentDate && (
-                  <div className="invalid-feedback">{validationErrors.establishmentDate}</div>
-              )}
-            </div>
-
-            {/* Форма правления */}
-            <div className="col-md-4">
-              <label className="form-label">Форма правления</label>
-              <select className="form-select" name="government" value={city.government} onChange={handleChange} required>
-                {governmentOptions.map((gov) => (
-                    <option key={gov} value={gov}>{gov}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Возраст губернатора */}
-            <div className="col-md-4">
-              <label className="form-label">Возраст губернатора</label>
-              <input
-                  type="text"
-                  className={`form-control ${validationErrors["governor.age"] ? "is-invalid" : ""}`}
-                  name="governor.age"
-                  value={city.governor.age}
-                  onChange={handleChange}
-                  onKeyDown={(e) => handleNumericKeyDown(e, false)}
-                  required
-              />
-              {validationErrors["governor.age"] && (
-                  <div className="invalid-feedback">{validationErrors["governor.age"]}</div>
-              )}
-            </div>
+      <form onSubmit={handleSubmit}>
+        <div className="row g-3">
+          {/* Название */}
+          <div className="col-md-6">
+            <label className="form-label">Название города</label>
+            <input
+              type="text"
+              className={`form-control ${
+                validationErrors.name ? "is-invalid" : ""
+              }`}
+              name="name"
+              value={city.name}
+              onChange={handleChange}
+              required
+            />
+            {validationErrors.name && (
+              <div className="invalid-feedback">{validationErrors.name}</div>
+            )}
           </div>
 
-          <div className="mt-4">
-            <button type="submit" className="btn btn-primary me-2">{id ? "Сохранить" : "Создать"}</button>
-            <button type="button" className="btn btn-secondary" onClick={() => navigate("/")}>Отмена</button>
+          {/* Координаты */}
+          {["x", "y"].map((axis) => (
+            <div className="col-md-3" key={axis}>
+              <label className="form-label">
+                Координата {axis.toUpperCase()}
+              </label>
+              <input
+                type="text"
+                className={`form-control ${
+                  validationErrors[`coordinates.${axis}`] ? "is-invalid" : ""
+                }`}
+                name={`coordinates.${axis}`}
+                value={city.coordinates[axis]}
+                onChange={handleChange}
+                onKeyDown={(e) => handleNumericKeyDown(e, true)}
+                required
+              />
+              {validationErrors[`coordinates.${axis}`] && (
+                <div className="invalid-feedback">
+                  {validationErrors[`coordinates.${axis}`]}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Остальные числовые поля */}
+          {[
+            { label: "Площадь", name: "area" },
+            { label: "Население", name: "population" },
+            { label: "Высота над уровнем моря", name: "metersAboveSeaLevel" },
+            {
+              label: "Плотность населения",
+              name: "populationDensity",
+              float: true,
+            },
+          ].map((f) => (
+            <div className="col-md-4" key={f.name}>
+              <label className="form-label">{f.label}</label>
+              <input
+                type="text"
+                className={`form-control ${
+                  validationErrors[f.name] ? "is-invalid" : ""
+                }`}
+                name={f.name}
+                value={city[f.name]}
+                onChange={handleChange}
+                onKeyDown={(e) => handleNumericKeyDown(e, !!f.float)}
+              />
+              {validationErrors[f.name] && (
+                <div className="invalid-feedback">
+                  {validationErrors[f.name]}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Дата основания */}
+          <div className="col-md-4">
+            <label className="form-label">Дата основания</label>
+            <input
+              type="date"
+              className={`form-control ${
+                validationErrors.establishmentDate ? "is-invalid" : ""
+              }`}
+              name="establishmentDate"
+              value={city.establishmentDate}
+              onChange={handleChange}
+              max={MAX_DATE}
+            />
+            {validationErrors.establishmentDate && (
+              <div className="invalid-feedback">
+                {validationErrors.establishmentDate}
+              </div>
+            )}
           </div>
-        </form>
-      </div>
+
+          {/* Форма правления */}
+          <div className="col-md-4">
+            <label className="form-label">Форма правления</label>
+            <select
+              className="form-select"
+              name="government"
+              value={city.government}
+              onChange={handleChange}
+              required
+            >
+              {governmentOptions.map((gov) => (
+                <option key={gov} value={gov}>
+                  {gov}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Возраст губернатора */}
+          <div className="col-md-4">
+            <label className="form-label">Возраст губернатора</label>
+            <input
+              type="text"
+              className={`form-control ${
+                validationErrors["governor.age"] ? "is-invalid" : ""
+              }`}
+              name="governor.age"
+              value={city.governor.age}
+              onChange={handleChange}
+              onKeyDown={(e) => handleNumericKeyDown(e, false)}
+              required
+            />
+            {validationErrors["governor.age"] && (
+              <div className="invalid-feedback">
+                {validationErrors["governor.age"]}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <button type="submit" className="btn btn-primary me-2">
+            {id ? "Сохранить" : "Создать"}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => navigate("/")}
+          >
+            Отмена
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
 
