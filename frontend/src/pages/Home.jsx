@@ -8,7 +8,6 @@ const governmentOptions = ["ALL", "DIARCHY", "KRITARCHY", "REPUBLIC"];
 // 🔹 Константы ограничений
 const MAX_NAME_LENGTH = 100;
 const MAX_INT_LENGTH = 10;
-const MAX_DOUBLE_LENGTH = 15;
 const MAX_AGE = 99;
 const MIN_AGE = 1;
 
@@ -26,12 +25,10 @@ export default function Home() {
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
 
-  // 🔹 Получение списка городов
   const fetchCities = useCallback(async () => {
-    setFetchError(""); // сброс ошибки
+    setFetchError("");
     const preparedFilters = { ...filters, ...searchValues };
 
-    // Корректировка даты
     if (preparedFilters.establishmentDate) {
       const ed = preparedFilters.establishmentDate;
       preparedFilters.establishmentDate = {
@@ -40,7 +37,6 @@ export default function Home() {
       };
     }
 
-    // Обработка координат
     const coordsX = preparedFilters["coordinates.x"];
     const coordsY = preparedFilters["coordinates.y"];
     if (coordsX || coordsY) {
@@ -64,8 +60,8 @@ export default function Home() {
 
       const citiesWithLinks = normalized.map((city) => {
         const linksArray = Array.isArray(city.links)
-          ? city.links
-          : [city.links];
+            ? city.links
+            : [city.links];
         const linksMap = {};
         linksArray.forEach((l) => {
           if (l?.rel && l?.href) linksMap[l.rel] = l.href;
@@ -104,9 +100,8 @@ export default function Home() {
     }
   };
 
-
   const handleEdit = (city) =>
-    navigate(`/edit/${city.id}`, { state: { city } });
+      navigate(`/edit/${city.id}`, { state: { city } });
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -117,47 +112,28 @@ export default function Home() {
     }
   };
 
-  // 🔹 Проверка корректности ввода
+  // 🔹 Валидация
   const validateField = (field, value) => {
     let err = "";
     if (value === "") return err;
 
-    const integerFields = [
-      "population",
-      "populationDensity",
-      "metersAboveSeaLevel",
-      "governor.age",
-    ];
-    const floatFields = ["coordinates.x", "coordinates.y", "area"];
+    const integerFields = ["population", "metersAboveSeaLevel", "governor.age", "area"];
 
     if (field === "name") {
       if (value.length > MAX_NAME_LENGTH)
         err = `Максимум ${MAX_NAME_LENGTH} символов`;
     }
 
-    if ([...integerFields, ...floatFields].includes(field)) {
-      const isInteger = integerFields.includes(field);
-      const numberRegex = isInteger ? /^-?\d+$/ : /^-?\d*(\.?\d*)?$/;
-
-      if (!numberRegex.test(value)) {
-        err = isInteger ? "Введите целое число" : "Введите число";
-      } else if (
-        value.length > (isInteger ? MAX_INT_LENGTH : MAX_DOUBLE_LENGTH)
-      ) {
-        err = `Максимум ${
-          isInteger ? MAX_INT_LENGTH : MAX_DOUBLE_LENGTH
-        } символов`;
-      } else {
+    if (integerFields.includes(field)) {
+      if (!/^-?\d*$/.test(value)) err = "Введите целое число";
+      else if (value.length > MAX_INT_LENGTH)
+        err = `Максимум ${MAX_INT_LENGTH} цифр`;
+      else if (field === "governor.age") {
         const num = Number(value);
-
-        if (["area", "population", "populationDensity"].includes(field)) {
-          if (num < 0) err = "Значение не может быть отрицательным";
-        }
-
-        if (field === "governor.age") {
-          if (num < MIN_AGE || num > MAX_AGE)
-            err = "Возраст должен быть от 1 до 99";
-        }
+        if (num < MIN_AGE || num > MAX_AGE) err = "Возраст должен быть от 1 до 99";
+      } else if (["population", "area"].includes(field)) {
+        const num = Number(value);
+        if (num < 0) err = "Значение не может быть отрицательным";
       }
     }
 
@@ -170,15 +146,19 @@ export default function Home() {
 
     setSearchValues((prev) => ({
       ...prev,
-      [field]: {
-        ...prev[field],
-        [bound]: value !== "" ? value : null,
-      },
+      [field]: { ...prev[field], [bound]: value !== "" ? value : null },
     }));
   };
 
   const handleSelectChange = (field, value) => {
     setSearchValues((prev) => ({ ...prev, [field]: value || null }));
+  };
+
+  // 🔹 Ограничения ввода
+  const handleIntegerKeyDown = (e) => {
+    const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "-"];
+    if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) e.preventDefault();
+    if (e.key === "-" && e.target.selectionStart !== 0) e.preventDefault();
   };
 
   const columns = [
@@ -196,219 +176,139 @@ export default function Home() {
   ];
 
   return (
-    <div className="container mt-4">
-      <h2>Список городов</h2>
+      <div className="container mt-4">
+        <h2>Список городов</h2>
 
-      {/* 🔹 Ошибки запросов */}
-      {fetchError && (
-        <div className="alert alert-danger mt-3" role="alert">
-          {fetchError}
-        </div>
-      )}
-      {deleteError && (
-        <div className="alert alert-warning mt-3" role="alert">
-          {deleteError}
-        </div>
-      )}
+        {fetchError && <div className="alert alert-danger mt-3">{fetchError}</div>}
+        {deleteError && <div className="alert alert-warning mt-3">{deleteError}</div>}
 
-      <table className="table table-bordered table-striped mt-3">
-        <thead className="table-dark">
+        <table className="table table-bordered table-striped mt-3">
+          <thead className="table-dark">
           <tr>
             {columns.map((col) => (
-              <th key={col.field}>
-                <div className="d-flex justify-content-between align-items-center">
-                  <span>{col.label}</span>
-                  <button
-                    onClick={() => handleSort(col.field)}
-                    style={{
-                      border: "none",
-                      background: "transparent",
-                      color: "white",
-                      cursor: "pointer",
-                      padding: 0,
-                    }}
-                    title="Сортировать"
-                  >
-                    {sortField === col.field
-                      ? sortDirection === "ASC"
-                        ? "▲"
-                        : "▼"
-                      : "↕"}
-                  </button>
-                </div>
+                <th key={col.field}>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span>{col.label}</span>
+                    <button
+                        onClick={() => handleSort(col.field)}
+                        style={{ border: "none", background: "transparent", color: "white", cursor: "pointer", padding: 0 }}
+                        title="Сортировать"
+                    >
+                      {sortField === col.field
+                          ? sortDirection === "ASC" ? "▲" : "▼"
+                          : "↕"}
+                    </button>
+                  </div>
 
-                {/* 🔹 Поля фильтров */}
-                {col.field === "government" ? (
-                  <select
-                    style={{ width: "100px" }}
-                    value={searchValues[col.field] || "ALL"}
-                    onChange={(e) =>
-                      handleSelectChange(
-                        col.field,
-                        e.target.value === "ALL" ? null : e.target.value
-                      )
-                    }
-                  >
-                    {governmentOptions.map((gov) => (
-                      <option key={gov} value={gov}>
-                        {gov}
-                      </option>
-                    ))}
-                  </select>
-                ) : col.field === "name" ? (
-                  <>
-                    <input
-                      type="text"
-                      style={{ width: "100px" }}
-                      value={searchValues[col.field] || ""}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        const err = validateField("name", val);
-                        setErrors((prev) => ({ ...prev, name: err }));
-                        handleSelectChange(col.field, val);
-                      }}
-                      placeholder="Поиск"
-                    />
-                    {errors.name && (
-                      <div className="text-danger small">{errors.name}</div>
-                    )}
-                  </>
-                ) : col.field === "establishmentDate" ? (
-                  <>
-                    <input
-                      type="date"
-                      style={{ width: "80px" }}
-                      value={searchValues[col.field]?.min || ""}
-                      onChange={(e) =>
-                        handleRangeChange(col.field, "min", e.target.value)
-                      }
-                    />
-                    <input
-                      type="date"
-                      style={{ width: "80px" }}
-                      value={searchValues[col.field]?.max || ""}
-                      onChange={(e) =>
-                        handleRangeChange(col.field, "max", e.target.value)
-                      }
-                    />
-                  </>
-                ) : col.field === "id" ? null : (
-                  <>
-                    <input
-                      type="text"
-                      placeholder="min"
-                      style={{ width: "45px" }}
-                      value={searchValues[col.field]?.min || ""}
-                      onChange={(e) => {
-                        let val = e.target.value.replace(/[^0-9.]/g, ""); // только цифры и точка
-                        const parts = val.split(".");
-                        if (parts.length > 2)
-                          val = parts[0] + "." + parts.slice(1).join("");
-                        const err = validateField(col.field, val);
-                        setErrors((prev) => ({ ...prev, [col.field]: err }));
-                        handleRangeChange(col.field, "min", val);
-                      }}
-                    />
-                    <input
-                      type="text"
-                      placeholder="max"
-                      style={{ width: "45px" }}
-                      value={searchValues[col.field]?.max || ""}
-                      onChange={(e) => {
-                        let val = e.target.value.replace(/[^0-9.]/g, "");
-                        const parts = val.split(".");
-                        if (parts.length > 2)
-                          val = parts[0] + "." + parts.slice(1).join("");
-                        const err = validateField(col.field, val);
-                        setErrors((prev) => ({ ...prev, [col.field]: err }));
-                        handleRangeChange(col.field, "max", val);
-                      }}
-                    />
-                    {errors[col.field] && (
-                      <div className="text-danger small">
-                        {errors[col.field]}
-                      </div>
-                    )}
-                  </>
-                )}
-              </th>
+                  {col.field === "government" ? (
+                      <select
+                          style={{ width: "100px" }}
+                          value={searchValues[col.field] || "ALL"}
+                          onChange={(e) =>
+                              handleSelectChange(col.field, e.target.value === "ALL" ? null : e.target.value)
+                          }
+                      >
+                        {governmentOptions.map((gov) => (
+                            <option key={gov} value={gov}>{gov}</option>
+                        ))}
+                      </select>
+                  ) : col.field === "name" ? (
+                      <>
+                        <input
+                            type="text"
+                            style={{ width: "100px" }}
+                            value={searchValues[col.field] || ""}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const err = validateField("name", val);
+                              setErrors((prev) => ({ ...prev, name: err }));
+                              handleSelectChange(col.field, val);
+                            }}
+                            placeholder="Поиск"
+                        />
+                        {errors.name && <div className="text-danger small">{errors.name}</div>}
+                      </>
+                  ) : col.field === "establishmentDate" ? (
+                      <>
+                        <input
+                            type="date"
+                            style={{ width: "80px" }}
+                            value={searchValues[col.field]?.min || ""}
+                            onChange={(e) => handleRangeChange(col.field, "min", e.target.value)}
+                        />
+                        <input
+                            type="date"
+                            style={{ width: "80px" }}
+                            value={searchValues[col.field]?.max || ""}
+                            onChange={(e) => handleRangeChange(col.field, "max", e.target.value)}
+                        />
+                      </>
+                  ) : col.field === "id" ? null : (
+                      <>
+                        <input
+                            type="text"
+                            placeholder="min"
+                            style={{ width: "45px" }}
+                            onKeyDown={["population","metersAboveSeaLevel","governor.age","area"].includes(col.field) ? handleIntegerKeyDown : undefined}
+                            value={searchValues[col.field]?.min || ""}
+                            onChange={(e) => handleRangeChange(col.field, "min", e.target.value)}
+                        />
+                        <input
+                            type="text"
+                            placeholder="max"
+                            style={{ width: "45px" }}
+                            onKeyDown={["population","metersAboveSeaLevel","governor.age","area"].includes(col.field) ? handleIntegerKeyDown : undefined}
+                            value={searchValues[col.field]?.max || ""}
+                            onChange={(e) => handleRangeChange(col.field, "max", e.target.value)}
+                        />
+                        {errors[col.field] && <div className="text-danger small">{errors[col.field]}</div>}
+                      </>
+                  )}
+                </th>
             ))}
             <th>Действия</th>
           </tr>
-        </thead>
+          </thead>
 
-        <tbody>
+          <tbody>
           {cities.length === 0 ? (
-            <tr>
-              <td colSpan={columns.length + 1} className="text-center">
-                Нет городов
-              </td>
-            </tr>
+              <tr>
+                <td colSpan={columns.length + 1} className="text-center">Нет городов</td>
+              </tr>
           ) : (
-            cities.map((city) => (
-              <CityRow
-                key={city.id}
-                city={city}
-                onDelete={handleDelete}
-                onEdit={handleEdit}
-              />
-            ))
+              cities.map((city) => (
+                  <CityRow
+                      key={city.id}
+                      city={city}
+                      onDelete={handleDelete}
+                      onEdit={handleEdit}
+                  />
+              ))
           )}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
 
-      {/* 🔹 Пагинация */}
-      <div className="d-flex justify-content-between align-items-center mt-3">
-        <div>
-          <button
-            className="btn btn-sm btn-outline-primary me-1"
-            onClick={() => setPage(0)}
-            disabled={page === 0}
-          >
-            {"<<"}
-          </button>
-          <button
-            className="btn btn-sm btn-outline-primary me-1"
-            onClick={() => setPage((p) => Math.max(p - 1, 0))}
-            disabled={page === 0}
-          >
-            {"<"}
-          </button>
-          <span>
-            Страница {page + 1} из {totalPages}
-          </span>
-          <button
-            className="btn btn-sm btn-outline-primary ms-1"
-            onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
-            disabled={page >= totalPages - 1}
-          >
-            {">"}
-          </button>
-          <button
-            className="btn btn-sm btn-outline-primary ms-1"
-            onClick={() => setPage(totalPages - 1)}
-            disabled={page >= totalPages - 1}
-          >
-            {">>"}
-          </button>
-        </div>
+        {/* 🔹 Пагинация */}
+        <div className="d-flex justify-content-between align-items-center mt-3">
+          <div>
+            <button className="btn btn-sm btn-outline-primary me-1" onClick={() => setPage(0)} disabled={page === 0}>{"<<"}</button>
+            <button className="btn btn-sm btn-outline-primary me-1" onClick={() => setPage((p) => Math.max(p - 1, 0))} disabled={page === 0}>{"<"}</button>
+            <span>Страница {page + 1} из {totalPages}</span>
+            <button className="btn btn-sm btn-outline-primary ms-1" onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))} disabled={page >= totalPages - 1}>{">"}</button>
+            <button className="btn btn-sm btn-outline-primary ms-1" onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1}>{">>"}</button>
+          </div>
 
-        <div>
-          <label>
-            Записей на странице:{" "}
-            <select
-              value={size}
-              onChange={(e) => setSize(Number(e.target.value))}
-            >
-              {[5, 10, 20, 50, 100].map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div>
+            <label>
+              Записей на странице:{" "}
+              <select value={size} onChange={(e) => setSize(Number(e.target.value))}>
+                {[5, 10, 20, 50, 100].map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
       </div>
-    </div>
   );
 }
