@@ -1,12 +1,8 @@
-export const formatDate = (d) => {
-  if (!d) return "";
-  if (Array.isArray(d)) {
-    const [year, month, day] = d;
-    return `${String(day).padStart(2, "0")}-${String(month).padStart(
-      2,
-      "0"
-    )}-${year}`;
+export const formatDate = (date) => {
+  if (!date) {
+    return "";
   }
-  if (typeof d === "string") return d.slice(0, 10);
-  return "";
+  const [datePart] = date.split("T");
+  const [year, month, day] = datePart.split("-");
+  return `${day.padStart(2, "0")}-${month.padStart(2, "0")}-${year}`;
 };

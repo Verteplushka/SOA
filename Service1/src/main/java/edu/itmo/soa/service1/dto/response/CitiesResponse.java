@@ -1,6 +1,7 @@
 package edu.itmo.soa.service1.dto.response;
 
 import edu.itmo.soa.service1.entity.City;
+import edu.itmo.soa.service1.entity.CityDto;
 import org.springframework.hateoas.RepresentationModel;
 
 import java.util.List;
@@ -11,14 +12,14 @@ public class CitiesResponse extends RepresentationModel<CitiesResponse> {
 
     @JacksonXmlElementWrapper(localName = "cities")
     @JacksonXmlProperty(localName = "city")
-    private List<City> cities;
+    private List<CityDto> cities;
 
     public CitiesResponse() {}
-    public CitiesResponse(List<City> cities) {
+    public CitiesResponse(List<CityDto> cities) {
         this.cities = cities;
     }
 
-    public List<City> getCities() {
+    public List<CityDto> getCities() {
         return cities;
     }
 }

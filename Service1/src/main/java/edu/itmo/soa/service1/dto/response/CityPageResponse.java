@@ -4,6 +4,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import edu.itmo.soa.service1.entity.City;
+import edu.itmo.soa.service1.entity.CityDto;
 import lombok.Data;
 import org.springframework.hateoas.RepresentationModel;
 
@@ -16,7 +17,7 @@ public class CityPageResponse extends RepresentationModel<CityPageResponse> {
     private Pagination pagination;
     @JacksonXmlElementWrapper(localName = "cities")
     @JacksonXmlProperty(localName = "city")
-    private List<City> cities;
+    private List<CityDto> cities;
 
     @Data
     public static class Pagination {

@@ -12,6 +12,7 @@ import edu.itmo.soa.service1.exception.CityAlreadyExistsException;
 import edu.itmo.soa.service1.exception.CityNotFoundException;
 import edu.itmo.soa.service1.exception.InvalidCityDataException;
 import edu.itmo.soa.service1.repo.CityRepository;
+import edu.itmo.soa.service1.util.CityMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -238,7 +239,7 @@ public class CityService {
         pagination.setPageSize(size);
 
         response.setPagination(pagination);
-        response.setCities(pageContent);
+        response.setCities(CityMapper.tocityDtoList(pageContent));
 
         return response;
     }
@@ -255,14 +256,14 @@ public class CityService {
         if (prefix == null || prefix.isEmpty()) {
             throw new IllegalArgumentException("Параметр prefix не должен быть пустой");
         }
-        return new CitiesResponse(cityRepository.findByNameStartingWith(prefix));
+        return new CitiesResponse(CityMapper.tocityDtoList(cityRepository.findByNameStartingWith(prefix)));
     }
 
     public CitiesResponse getCitiesByGovernorAge(int age) {
         if (age <= 0) {
             throw new IllegalArgumentException("Параметр age должен быть больше 0");
         }
-        return new CitiesResponse(cityRepository.findByGovernorAgeGreaterThan(age));
+        return new CitiesResponse(CityMapper.tocityDtoList(cityRepository.findByGovernorAgeGreaterThan(age)));
     }
 
     private void validateCityInput(CityInput input) {

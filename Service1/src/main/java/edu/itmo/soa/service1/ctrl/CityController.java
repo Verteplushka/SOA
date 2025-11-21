@@ -6,10 +6,12 @@ import edu.itmo.soa.service1.dto.response.CitiesResponse;
 import edu.itmo.soa.service1.dto.response.CityPageResponse;
 import edu.itmo.soa.service1.entity.City;
 import edu.itmo.soa.service1.dto.error.ErrorResponse;
+import edu.itmo.soa.service1.entity.CityDto;
 import edu.itmo.soa.service1.exception.CityAlreadyExistsException;
 import edu.itmo.soa.service1.exception.CityNotFoundException;
 import edu.itmo.soa.service1.exception.InvalidCityDataException;
 import edu.itmo.soa.service1.service.CityService;
+import edu.itmo.soa.service1.util.CityMapper;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,38 +38,41 @@ public class CityController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getCityById(@PathVariable("id") int id) {
         City city = cityService.findById(id);
+        CityDto cityDto = CityMapper.toCityDto(city);
 
-        city.add(linkTo(methodOn(CityController.class).getCityById(id)).withSelfRel());
-        city.add(linkTo(methodOn(CityController.class).deleteCityById(id)).withRel("delete"));
-        city.add(linkTo(methodOn(CityController.class).updateCity(id, null)).withRel("update"));
-        city.add(linkTo(methodOn(CityController.class).searchCities(null)).withRel("search"));
+        cityDto.add(linkTo(methodOn(CityController.class).getCityById(id)).withSelfRel());
+        cityDto.add(linkTo(methodOn(CityController.class).deleteCityById(id)).withRel("delete"));
+        cityDto.add(linkTo(methodOn(CityController.class).updateCity(id, null)).withRel("update"));
+        cityDto.add(linkTo(methodOn(CityController.class).searchCities(null)).withRel("search"));
 
-        return ResponseEntity.ok(city);
+        return ResponseEntity.ok(cityDto);
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<?> createCity(@Valid @RequestBody CityInput input) {
         City saved = cityService.createCity(input);
+        CityDto cityDto = CityMapper.toCityDto(saved);
 
-        saved.add(linkTo(methodOn(CityController.class).createCity(null)).withSelfRel());
-        saved.add(linkTo(methodOn(CityController.class).getCityById(saved.getId())).withRel("get"));
-        saved.add(linkTo(methodOn(CityController.class).updateCity(saved.getId(), null)).withRel("update"));
-        saved.add(linkTo(methodOn(CityController.class).deleteCityById(saved.getId())).withRel("delete"));
-        saved.add(linkTo(methodOn(CityController.class).searchCities(null)).withRel("search"));
+        cityDto.add(linkTo(methodOn(CityController.class).createCity(null)).withSelfRel());
+        cityDto.add(linkTo(methodOn(CityController.class).getCityById(cityDto.getId())).withRel("get"));
+        cityDto.add(linkTo(methodOn(CityController.class).updateCity(cityDto.getId(), null)).withRel("update"));
+        cityDto.add(linkTo(methodOn(CityController.class).deleteCityById(cityDto.getId())).withRel("delete"));
+        cityDto.add(linkTo(methodOn(CityController.class).searchCities(null)).withRel("search"));
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(cityDto);
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<?> updateCity(@PathVariable("id") int id, @Valid @RequestBody CityInput input) {
         City updated = cityService.updateCity(id, input);
+        CityDto cityDto = CityMapper.toCityDto(updated);
 
-        updated.add(linkTo(methodOn(CityController.class).updateCity(id, null)).withSelfRel());
-        updated.add(linkTo(methodOn(CityController.class).getCityById(id)).withRel("get"));
-        updated.add(linkTo(methodOn(CityController.class).deleteCityById(updated.getId())).withRel("delete"));
-        updated.add(linkTo(methodOn(CityController.class).searchCities(null)).withRel("search"));
+        cityDto.add(linkTo(methodOn(CityController.class).updateCity(id, null)).withSelfRel());
+        cityDto.add(linkTo(methodOn(CityController.class).getCityById(id)).withRel("get"));
+        cityDto.add(linkTo(methodOn(CityController.class).deleteCityById(cityDto.getId())).withRel("delete"));
+        cityDto.add(linkTo(methodOn(CityController.class).searchCities(null)).withRel("search"));
 
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(cityDto);
     }
 
     @DeleteMapping("/{id}")
@@ -81,7 +86,7 @@ public class CityController {
         try {
             CityPageResponse response = cityService.searchCities(request);
 
-            addLinksToCities(response.getCities());
+            addLinksToCitiesDto(response.getCities());
             response.add(linkTo(methodOn(CityController.class).searchCities(request)).withSelfRel());
 
             if(response.getPagination().getCurrentPage() > 0) {
@@ -113,7 +118,7 @@ public class CityController {
     public ResponseEntity<?> getCitiesByNamePrefix(@RequestParam("prefix") String prefix) {
         CitiesResponse response = cityService.findByNamePrefix(prefix);
 
-        addLinksToCities(response.getCities());
+        addLinksToCitiesDto(response.getCities());
         response.add(linkTo(methodOn(CityController.class).getCitiesByNamePrefix(prefix)).withSelfRel());
 
         return ResponseEntity.ok(response);
@@ -128,7 +133,7 @@ public class CityController {
 
         CitiesResponse response = cityService.getCitiesByGovernorAge(age);
 
-        addLinksToCities(response.getCities());
+        addLinksToCitiesDto(response.getCities());
         response.add(linkTo(methodOn(CityController.class).getCitiesByGovernorAge(age)).withSelfRel());
 
         return ResponseEntity.ok(response);
@@ -163,8 +168,8 @@ public class CityController {
                 .body(new ErrorResponse("NOT_FOUND", exception.getMessage(), ZonedDateTime.now()));
     }
 
-    private void addLinksToCities(List<City> cities) {
-        for (City city : cities) {
+    private void addLinksToCitiesDto(List<CityDto> citiesDto) {
+        for (CityDto city : citiesDto) {
             city.add(linkTo(methodOn(CityController.class).getCityById(city.getId())).withRel("get"));
             city.add(linkTo(methodOn(CityController.class).updateCity(city.getId(), null)).withRel("update"));
             city.add(linkTo(methodOn(CityController.class).deleteCityById(city.getId())).withRel("delete"));
