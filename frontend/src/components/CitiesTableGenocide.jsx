@@ -1,29 +1,5 @@
-import { localizeGovernment } from "../utils/governmentMap";
-
-function getNestedValue(obj, key) {
-  if (obj === null || obj === undefined) return "";
-
-  if (key === "coordinates" && typeof obj === "object") {
-    return `x: ${obj.x}, y: ${obj.y}`;
-  }
-
-  if (key === "governor" && typeof obj === "object") {
-    return obj.age ?? "";
-  }
-
-  if (key === "establishmentDate" && Array.isArray(obj)) {
-    const [year, month, day] = obj;
-    if (year && month && day)
-      return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(
-        2,
-        "0"
-      )}`;
-    return "";
-  }
-
-  if (typeof obj === "object") return JSON.stringify(obj);
-  return obj;
-}
+import { localizeGovernment } from "../utils/government-localizator";
+import { formatDate } from "../utils/date-localizator";
 
 export default function SimpleCitiesTable({ cities }) {
   if (!cities || cities.length === 0) return null;
@@ -82,12 +58,7 @@ export default function SimpleCitiesTable({ cities }) {
                   <td>{city.populationDensity}</td>
                   <td>{localizeGovernment(city.government) ?? "—"}</td>
                   <td>{city.governor?.age ?? "—"}</td>
-                  <td>
-                    {getNestedValue(
-                      city.establishmentDate,
-                      "establishmentDate"
-                    )}
-                  </td>
+                  <td>{formatDate(city.establishmentDate)}</td>
                 </tr>
               ))}
             </tbody>

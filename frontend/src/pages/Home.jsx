@@ -2,7 +2,10 @@ import { useEffect, useState, useCallback } from "react";
 import { searchCities } from "../api/api-service1";
 import { useNavigate } from "react-router-dom";
 import CityRow from "../components/CityRow";
-import { governmentMap, getGovernmentKey } from "../utils/governmentMap";
+import {
+  governmentMap,
+  getGovernmentKey,
+} from "../utils/government-localizator";
 
 const MAX_NAME_LENGTH = 100;
 const MAX_INT_LENGTH = 10;

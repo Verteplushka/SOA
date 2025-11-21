@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { addCity, getCity, toXml } from "../api/api-service1";
 import { XMLParser } from "fast-xml-parser";
-import { governmentOptions, getGovernmentKey } from "../utils/governmentMap";
+import {
+  governmentOptions,
+  getGovernmentKey,
+} from "../utils/government-localizator";
 
 const MAX_DATE = "2025-11-08";
 const MAX_INT_LENGTH = 9;
