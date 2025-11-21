@@ -1,4 +1,4 @@
-package model;
+package model.response;
 
 import jakarta.xml.bind.annotation.*;
 import lombok.Data;

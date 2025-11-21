@@ -7,7 +7,7 @@ import jakarta.xml.bind.annotation.XmlType;
 @XmlType(name = "government")
 @XmlEnum
 public enum Government {
-    @XmlEnumValue("OLIGARCHY") OLIGARCHY,
-    @XmlEnumValue("MONARCHY") KRITARCHY,
-    @XmlEnumValue("DIARCHY") REPUBLIC;
+    @XmlEnumValue("DIARCHY") DIARCHY,
+    @XmlEnumValue("KRITARCHY") KRITARCHY,
+    @XmlEnumValue("REPUBLIC") REPUBLIC;
 }

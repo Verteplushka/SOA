@@ -3,6 +3,8 @@ package service;
 import exception.ApiErrorException;
 import jakarta.enterprise.context.ApplicationScoped;
 import model.*;
+import model.request.CitySearchRequest;
+import model.CityPageResponse;
 import retrofit2.converter.jaxb.JaxbConverterFactory;
 import retrofit2.Retrofit;
 import okhttp3.OkHttpClient;

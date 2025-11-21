@@ -2,6 +2,7 @@ package model;
 
 import jakarta.xml.bind.annotation.*;
 import lombok.Data;
+import model.City;
 
 import java.util.List;
 

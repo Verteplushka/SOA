@@ -3,6 +3,7 @@ package model;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import lombok.Data;
+import model.adapter.LocalDateTimeAdapter;
 
 import java.time.LocalDateTime;
 

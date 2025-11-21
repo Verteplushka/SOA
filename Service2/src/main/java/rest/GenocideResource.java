@@ -1,6 +1,10 @@
 package rest;
 
+import exception.ApiErrorException;
 import model.*;
+import model.response.ErrorResponse;
+import model.response.PopulationResponse;
+import model.response.RelocationResponse;
 import service.CityServiceClient;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -29,12 +33,10 @@ public class GenocideResource {
                         .entity(new ErrorResponse("NOT_FOUND", "Город с id " + id + " не найден"))
                         .build();
             }
-
             return Response.ok(city).build();
-
-        } catch (Exception e) {
+        } catch (ApiErrorException e) {
             return Response.serverError()
-                    .entity(new ErrorResponse("INTERNAL_SERVER_ERROR", e.getMessage()))
+                    .entity(new ErrorResponse("SERVICE1_API_ERROR", e.getMessage()))
                     .build();
         }
     }
@@ -58,15 +60,12 @@ public class GenocideResource {
             }
 
             long totalPopulation = c1.getPopulation() + c2.getPopulation() + c3.getPopulation();
-
             PopulationResponse result = new PopulationResponse();
             result.setTotalPopulation(totalPopulation);
-
             return Response.ok(result).build();
-
-        } catch (Exception e) {
+        } catch (ApiErrorException e) {
             return Response.serverError()
-                    .entity(new ErrorResponse("INTERNAL_SERVER_ERROR", e.getMessage()))
+                    .entity(new ErrorResponse("SERVICE1_API_ERROR", e.getMessage()))
                     .build();
         }
     }
@@ -113,9 +112,9 @@ public class GenocideResource {
 
             return Response.ok(response).build();
 
-        } catch (Exception e) {
+        } catch (ApiErrorException e) {
             return Response.serverError()
-                    .entity(new ErrorResponse("INTERNAL_SERVER_ERROR", e.getMessage()))
+                    .entity(new ErrorResponse("SERVICE1_API_ERROR", e.getMessage()))
                     .build();
         }
     }

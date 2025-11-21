@@ -3,7 +3,7 @@ package service;
 import model.City;
 import model.CityInput;
 import model.CityPageResponse;
-import model.CitySearchRequest;
+import model.request.CitySearchRequest;
 import retrofit2.Call;
 import retrofit2.http.*;
 
