@@ -2,8 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { searchCities } from "../api/api-service1";
 import { useNavigate } from "react-router-dom";
 import CityRow from "../components/CityRow";
-
-const governmentOptions = ["ALL", "DIARCHY", "KRITARCHY", "REPUBLIC"];
+import { governmentMap, getGovernmentKey } from "../utils/governmentMap";
 
 const MAX_NAME_LENGTH = 100;
 const MAX_INT_LENGTH = 10;
@@ -111,7 +110,6 @@ export default function Home() {
     }
   };
 
-  // 🔹 Валидация
   const validateField = (field, value) => {
     let err = "";
     if (value === "") return err;
@@ -171,7 +169,6 @@ export default function Home() {
     setSearchValues((prev) => ({ ...prev, [field]: value || null }));
   };
 
-  // 🔹 Ограничения ввода
   const handleIntegerKeyDown = (e) => {
     const allowedKeys = [
       "Backspace",
@@ -204,19 +201,16 @@ export default function Home() {
     const selectionStart = e.target.selectionStart;
     const selectionEnd = e.target.selectionEnd;
 
-    // запрещаем второй минус
     if (e.key === "-" && (selectionStart !== 0 || value.includes("-"))) {
       e.preventDefault();
       return;
     }
 
-    // запрещаем вторую точку
     if (e.key === "." && value.includes(".")) {
       e.preventDefault();
       return;
     }
 
-    // запрещаем ввод цифр после разрешённой точности
     if (/[0-9]/.test(e.key) && value.includes(".")) {
       const [intPart, decPart] = value.split(".");
       if (
@@ -285,17 +279,23 @@ export default function Home() {
                 {col.field === "government" ? (
                   <select
                     style={{ width: "100px" }}
-                    value={searchValues[col.field] || "ALL"}
+                    value={
+                      searchValues[col.field]
+                        ? governmentMap[searchValues[col.field]]
+                        : "ЛЮБАЯ"
+                    }
                     onChange={(e) =>
                       handleSelectChange(
                         col.field,
-                        e.target.value === "ALL" ? null : e.target.value
+                        e.target.value === "ЛЮБАЯ"
+                          ? null
+                          : getGovernmentKey(e.target.value)
                       )
                     }
                   >
-                    {governmentOptions.map((gov) => (
-                      <option key={gov} value={gov}>
-                        {gov}
+                    {Object.values(governmentMap).map((label) => (
+                      <option key={label} value={label}>
+                        {label}
                       </option>
                     ))}
                   </select>
@@ -408,7 +408,6 @@ export default function Home() {
         </tbody>
       </table>
 
-      {/* Пагинация */}
       <div className="d-flex justify-content-between align-items-center mt-3">
         <div>
           <button

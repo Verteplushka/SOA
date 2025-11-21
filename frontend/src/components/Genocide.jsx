@@ -56,7 +56,6 @@ export default function Genocide() {
     }
   };
 
-  // 🔹 Запрещаем ввод нечисловых символов
   const handleNumericKeyDown = (e) => {
     const allowedKeys = [
       "Backspace",
@@ -126,7 +125,6 @@ export default function Genocide() {
       <div className="container my-4">
         <h2 className="mb-4">Геноцидные эндпоинты</h2>
 
-        {/* Блок подсчёта населения */}
         <div className="card mb-4 shadow-sm">
           <div className="card-body">
             <h3 className="card-title mb-3">Суммарное население 3 городов</h3>
@@ -168,7 +166,6 @@ export default function Genocide() {
           </div>
         </div>
 
-        {/* Блок переселения */}
         <div className="card mb-4 shadow-sm">
           <div className="card-body">
             <h3 className="card-title mb-3">

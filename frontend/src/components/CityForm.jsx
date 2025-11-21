@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { addCity, getCity, toXml } from "../api/api-service1";
 import { XMLParser } from "fast-xml-parser";
-
-const governmentOptions = ["DIARCHY", "KRITARCHY", "REPUBLIC"];
-const parser = new XMLParser({ ignoreAttributes: false });
+import { governmentOptions, getGovernmentKey } from "../utils/governmentMap";
 
 const MAX_DATE = "2025-11-08";
 const MAX_INT_LENGTH = 9;
@@ -156,7 +154,6 @@ function CityForm({ existingCity }) {
     validateField(name, value);
   };
 
-  // 🔹 Блокировка нечисловых символов
   const handleNumericKeyDown = (e, isFloatField = false) => {
     const allowedKeys = [
       "Backspace",
@@ -166,7 +163,6 @@ function CityForm({ existingCity }) {
       "Tab",
     ];
     if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
-      // Для float полей разрешаем точку и минус
       if (
         !(
           isFloatField &&
@@ -176,10 +172,8 @@ function CityForm({ existingCity }) {
         e.preventDefault();
       }
     }
-    // Для float поля запрещаем вторую точку
     if (isFloatField && e.key === "." && e.target.value.includes("."))
       e.preventDefault();
-    // Для float поля минус только в начале
     if (isFloatField && e.key === "-" && e.target.selectionStart !== 0)
       e.preventDefault();
   };
@@ -225,6 +219,7 @@ function CityForm({ existingCity }) {
       metersAboveSeaLevel: Number(city.metersAboveSeaLevel),
       populationDensity: Number(city.populationDensity),
       governor: { age: Number(city.governor.age) },
+      government: getGovernmentKey(city.government),
       establishmentDate: formatLocalDateTime(city.establishmentDate),
     };
 
@@ -275,7 +270,6 @@ function CityForm({ existingCity }) {
             )}
           </div>
 
-          {/* Координаты */}
           {["x", "y"].map((axis) => (
             <div className="col-md-3" key={axis}>
               <label className="form-label">
@@ -300,7 +294,6 @@ function CityForm({ existingCity }) {
             </div>
           ))}
 
-          {/* Остальные числовые поля */}
           {[
             { label: "Площадь", name: "area" },
             { label: "Население", name: "population" },
@@ -331,7 +324,6 @@ function CityForm({ existingCity }) {
             </div>
           ))}
 
-          {/* Дата основания */}
           <div className="col-md-4">
             <label className="form-label">Дата основания</label>
             <input
@@ -351,7 +343,6 @@ function CityForm({ existingCity }) {
             )}
           </div>
 
-          {/* Форма правления */}
           <div className="col-md-4">
             <label className="form-label">Форма правления</label>
             <select
@@ -369,7 +360,6 @@ function CityForm({ existingCity }) {
             </select>
           </div>
 
-          {/* Возраст губернатора */}
           <div className="col-md-4">
             <label className="form-label">Возраст губернатора</label>
             <input

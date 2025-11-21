@@ -1,3 +1,5 @@
+import { governmentMap } from "../utils/governmentMap";
+
 export default function CityRow({ city, onDelete, onEdit }) {
   const formatDate = (d) => {
     if (!d) return "";
@@ -25,7 +27,7 @@ export default function CityRow({ city, onDelete, onEdit }) {
         {city.establishmentDate ? formatDate(city.establishmentDate) : ""}
       </td>
       <td>{city.populationDensity}</td>
-      <td>{city.government}</td>
+      <td>{governmentMap[city.government] || city.government}</td>
       <td>{city.governor?.age}</td>
       <td>
         <button

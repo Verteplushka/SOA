@@ -6,7 +6,6 @@ import {
 } from "../api/api-service1";
 import SimpleCitiesTable from "../components/SimpleCitiesTable";
 
-// Функция разбора ошибки из XML
 function parseErrorMessage(xmlString) {
   try {
     const parser = new DOMParser();
@@ -68,7 +67,6 @@ export default function SpecialQueries() {
     return !err;
   };
 
-  // === Обработчики ===
   const handleDelete = async () => {
     setDeleteResult(null);
     setDeleteError(null);
@@ -97,7 +95,6 @@ export default function SpecialQueries() {
 
     try {
       const res = await byNamePrefix(prefix);
-      // Если сервер вернул ошибку NOT_FOUND
       if (res?.error === "NOT_FOUND") {
         setPrefixError("Город с заданным именем не найден");
         setTableResult([]);
@@ -139,7 +136,6 @@ export default function SpecialQueries() {
     }
   };
 
-  // === Ограничение ввода ===
   const handleMetersInput = (e) => {
     const value = e.target.value;
     if (/^-?\d*$/.test(value)) {
@@ -160,7 +156,6 @@ export default function SpecialQueries() {
     <div className="container my-4">
       <h2 className="mb-4">Прочие эндпоинты</h2>
 
-      {/* Удаление по meters */}
       <div className="card mb-4 shadow-sm">
         <div className="card-body">
           <h3 className="card-title mb-3">
@@ -190,7 +185,6 @@ export default function SpecialQueries() {
         </div>
       </div>
 
-      {/* Поиск по имени */}
       <div className="card mb-4 shadow-sm">
         <div className="card-body">
           <h3 className="card-title mb-3">Поиск по имени</h3>
@@ -220,7 +214,6 @@ export default function SpecialQueries() {
         </div>
       </div>
 
-      {/* Поиск по возрасту губернатора */}
       <div className="card mb-4 shadow-sm">
         <div className="card-body">
           <h3 className="card-title mb-3">
@@ -249,7 +242,6 @@ export default function SpecialQueries() {
         </div>
       </div>
 
-      {/* Таблица результатов */}
       {tableResult.length > 0 && <SimpleCitiesTable cities={tableResult} />}
     </div>
   );
