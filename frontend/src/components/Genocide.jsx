@@ -47,7 +47,7 @@ export default function Genocide() {
   const checkDuplicateIds = () => {
     const values = Object.values(ids).filter((v) => v.trim() !== "");
     const duplicates = values.filter(
-        (v, i) => values.indexOf(v) !== i && v !== ""
+      (v, i) => values.indexOf(v) !== i && v !== ""
     );
     if (duplicates.length > 0) {
       setDuplicateWarning("Введены повторяющиеся ID городов!");
@@ -88,8 +88,8 @@ export default function Genocide() {
       setTotalPopulation(total);
     } catch (e) {
       const msg = e.response?.data
-          ? parseErrorMessage(e.response.data)
-          : e.message || e.toString();
+        ? parseErrorMessage(e.response.data)
+        : e.message || e.toString();
       setCountError(msg);
     }
   };
@@ -109,95 +109,93 @@ export default function Genocide() {
       const target = res?.relocationResult?.targetCity;
       if (source && target) {
         setMoveResult([
-          { ...source, role: "Source" },
-          { ...target, role: "Target" },
+          { ...source, role: "Откуда" },
+          { ...target, role: "Куда" },
         ]);
       }
     } catch (e) {
       const msg = e.response?.data
-          ? parseErrorMessage(e.response.data)
-          : e.message || e.toString();
+        ? parseErrorMessage(e.response.data)
+        : e.message || e.toString();
       setMoveError(msg);
     }
   };
 
   return (
-      <div className="container my-4">
-        <h2 className="mb-4">Геноцидные эндпоинты</h2>
+    <div className="container my-4">
+      <h2 className="mb-4">Геноцидные эндпоинты</h2>
 
-        <div className="card mb-4 shadow-sm">
-          <div className="card-body">
-            <h3 className="card-title mb-3">Суммарное население 3 городов</h3>
-            <div className="row g-2 mb-3">
-              {["id1", "id2", "id3"].map((k) => (
-                  <div className="col-md" key={k}>
-                    <input
-                        type="text"
-                        className={`form-control ${
-                            validationErrors[k] ? "is-invalid" : ""
-                        }`}
-                        placeholder={k.toUpperCase()}
-                        value={ids[k]}
-                        onChange={(e) => handleIdChange(k, e.target.value)}
-                        onKeyDown={handleNumericKeyDown}
-                    />
-                    {validationErrors[k] && (
-                        <div className="invalid-feedback">
-                          {validationErrors[k]}
-                        </div>
-                    )}
-                  </div>
-              ))}
-            </div>
-            <button className="btn btn-primary" onClick={handleCount}>
-              Посчитать
-            </button>
-
-            {duplicateWarning && (
-                <div className="text-warning mt-3">{duplicateWarning}</div>
-            )}
-
-            {countError && <div className="text-danger mt-3">{countError}</div>}
-            {totalPopulation !== null && (
-                <div className="mt-3">
-                  <strong>Суммарное население:</strong> {totalPopulation}
-                </div>
-            )}
-          </div>
-        </div>
-
-        <div className="card mb-4 shadow-sm">
-          <div className="card-body">
-            <h3 className="card-title mb-3">
-              Переселить в город с наихудшим уровнем жизни
-            </h3>
-            <div className="input-group mb-3">
-              <input
+      <div className="card mb-4 shadow-sm">
+        <div className="card-body">
+          <h3 className="card-title mb-3">Суммарное население 3 городов</h3>
+          <div className="row g-2 mb-3">
+            {["id1", "id2", "id3"].map((k) => (
+              <div className="col-md" key={k}>
+                <input
                   type="text"
                   className={`form-control ${
-                      validationErrors.moveId ? "is-invalid" : ""
+                    validationErrors[k] ? "is-invalid" : ""
                   }`}
-                  placeholder="ID"
-                  value={moveId}
-                  onChange={(e) => {
-                    setMoveId(e.target.value);
-                    validateInput("moveId", e.target.value);
-                  }}
+                  placeholder={k.toUpperCase()}
+                  value={ids[k]}
+                  onChange={(e) => handleIdChange(k, e.target.value)}
                   onKeyDown={handleNumericKeyDown}
-              />
-              <button className="btn btn-warning" onClick={handleMove}>
-                Переселить
-              </button>
-              {validationErrors.moveId && (
-                  <div className="invalid-feedback d-block">
-                    {validationErrors.moveId}
-                  </div>
-              )}
-            </div>
-            {moveError && <div className="text-danger mt-3">{moveError}</div>}
-            {moveResult && <CitiesTableGenocide cities={moveResult} />}
+                />
+                {validationErrors[k] && (
+                  <div className="invalid-feedback">{validationErrors[k]}</div>
+                )}
+              </div>
+            ))}
           </div>
+          <button className="btn btn-primary" onClick={handleCount}>
+            Посчитать
+          </button>
+
+          {duplicateWarning && (
+            <div className="text-warning mt-3">{duplicateWarning}</div>
+          )}
+
+          {countError && <div className="text-danger mt-3">{countError}</div>}
+          {totalPopulation !== null && (
+            <div className="mt-3">
+              <strong>Суммарное население:</strong> {totalPopulation}
+            </div>
+          )}
         </div>
       </div>
+
+      <div className="card mb-4 shadow-sm">
+        <div className="card-body">
+          <h3 className="card-title mb-3">
+            Переселить в город с наихудшим уровнем жизни
+          </h3>
+          <div className="input-group mb-3">
+            <input
+              type="text"
+              className={`form-control ${
+                validationErrors.moveId ? "is-invalid" : ""
+              }`}
+              placeholder="ID"
+              value={moveId}
+              onChange={(e) => {
+                setMoveId(e.target.value);
+                validateInput("moveId", e.target.value);
+              }}
+              onKeyDown={handleNumericKeyDown}
+            />
+            <button className="btn btn-warning" onClick={handleMove}>
+              Переселить
+            </button>
+            {validationErrors.moveId && (
+              <div className="invalid-feedback d-block">
+                {validationErrors.moveId}
+              </div>
+            )}
+          </div>
+          {moveError && <div className="text-danger mt-3">{moveError}</div>}
+          {moveResult && <CitiesTableGenocide cities={moveResult} />}
+        </div>
+      </div>
+    </div>
   );
 }

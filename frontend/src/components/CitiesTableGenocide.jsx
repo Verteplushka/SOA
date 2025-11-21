@@ -1,4 +1,4 @@
-import React from "react";
+import { localizeGovernment } from "../utils/governmentMap";
 
 function getNestedValue(obj, key) {
   if (obj === null || obj === undefined) return "";
@@ -51,18 +51,18 @@ export default function SimpleCitiesTable({ cities }) {
             <thead className="table-dark">
               <tr>
                 {[
-                  "Role",
+                  "Роль",
                   "ID",
-                  "Name",
+                  "Имя",
                   "X",
                   "Y",
-                  "Area",
-                  "Population",
-                  "Meters Above Sea Level",
-                  "Population Density",
-                  "Government",
-                  "Governor Age",
-                  "Establishment Date",
+                  "Площадь",
+                  "Население",
+                  "Метров над уровнем моря",
+                  "Плотность населения",
+                  "Форма правления",
+                  "Возраст губернатора",
+                  "Дата основания",
                 ].map((h) => (
                   <th key={h}>{h}</th>
                 ))}
@@ -80,7 +80,7 @@ export default function SimpleCitiesTable({ cities }) {
                   <td>{city.population}</td>
                   <td>{city.metersAboveSeaLevel}</td>
                   <td>{city.populationDensity}</td>
-                  <td>{city.government ?? "—"}</td>
+                  <td>{localizeGovernment(city.government) ?? "—"}</td>
                   <td>{city.governor?.age ?? "—"}</td>
                   <td>
                     {getNestedValue(
