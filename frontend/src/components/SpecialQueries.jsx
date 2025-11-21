@@ -39,7 +39,6 @@ export default function SpecialQueries() {
   const [validationErrors, setValidationErrors] = useState({});
   const [tableResult, setTableResult] = useState([]);
 
-  // === Валидации ===
   const validateMeters = (value) => {
     let err = "";
     if (!/^-?\d+$/.test(value)) err = "Введите целое число";
@@ -92,7 +91,6 @@ export default function SpecialQueries() {
       setPrefixError("Исправьте ошибки перед поиском");
       return;
     }
-
     try {
       const res = await byNamePrefix(prefix);
       if (res?.error === "NOT_FOUND") {
@@ -100,14 +98,12 @@ export default function SpecialQueries() {
         setTableResult([]);
         return;
       }
-
       const cities = res?.citiesResponse?.cities?.city || [];
       if (!cities || (Array.isArray(cities) && cities.length === 0)) {
         setPrefixError("Город с заданным именем не найден");
         setTableResult([]);
         return;
       }
-
       setTableResult(Array.isArray(cities) ? cities : [cities]);
     } catch (e) {
       const msg = e.response?.data

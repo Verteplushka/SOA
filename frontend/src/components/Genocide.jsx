@@ -28,13 +28,11 @@ export default function Genocide() {
 
   const validateInput = (key, value) => {
     let error = "";
-
     if (!/^\d*$/.test(value)) {
       error = "Разрешены только цифры";
     } else if (value.length > MAX_LENGTH) {
       error = `Максимальная длина — ${MAX_LENGTH} цифр`;
     }
-
     setValidationErrors((prev) => ({ ...prev, [key]: error }));
     return error === "";
   };
@@ -64,7 +62,6 @@ export default function Genocide() {
       "ArrowRight",
       "Tab",
     ];
-
     if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
       e.preventDefault();
     }
@@ -73,15 +70,12 @@ export default function Genocide() {
   const handleCount = async () => {
     setTotalPopulation(null);
     setCountError(null);
-
     const valid = Object.keys(ids).every((k) => validateInput(k, ids[k]));
     if (!valid) {
       setCountError("Проверьте правильность введённых ID");
       return;
     }
-
     checkDuplicateIds();
-
     try {
       const res = await genocideCount(ids.id1, ids.id2, ids.id3);
       const total = res.population?.totalPopulation ?? "0";
@@ -97,12 +91,10 @@ export default function Genocide() {
   const handleMove = async () => {
     setMoveResult(null);
     setMoveError(null);
-
     if (!validateInput("moveId", moveId)) {
       setMoveError("Некорректный ID города");
       return;
     }
-
     try {
       const res = await genocideMoveToPoorest(moveId);
       const source = res?.relocationResult?.sourceCity;
@@ -124,7 +116,6 @@ export default function Genocide() {
   return (
     <div className="container my-4">
       <h2 className="mb-4">Геноцидные эндпоинты</h2>
-
       <div className="card mb-4 shadow-sm">
         <div className="card-body">
           <h3 className="card-title mb-3">Суммарное население 3 городов</h3>
