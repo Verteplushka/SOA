@@ -12,7 +12,6 @@ import model.Sort;
 @XmlAccessorType(XmlAccessType.FIELD)
 @Data
 public class CitySearchRequest {
-
     private Pagination pagination;
     private Sort sort;
     private Filter filter = new Filter();
