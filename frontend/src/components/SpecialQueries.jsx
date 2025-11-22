@@ -123,14 +123,22 @@ export default function SpecialQueries() {
     try {
       const res = await byGovernorAge(age);
       const cities = res?.citiesResponse?.cities?.city || [];
+
+      if (!cities || (Array.isArray(cities) && cities.length === 0)) {
+        setAgeError("Города с губернатором старше заданного возраста не найдены");
+        setTableResult([]);
+        return;
+      }
+
       setTableResult(Array.isArray(cities) ? cities : [cities]);
     } catch (e) {
       const msg = e.response?.data
-        ? parseErrorMessage(e.response.data)
-        : e.message || e.toString();
+          ? parseErrorMessage(e.response.data)
+          : e.message || e.toString();
       setAgeError(msg);
     }
   };
+
 
   const handleMetersInput = (e) => {
     const value = e.target.value;
