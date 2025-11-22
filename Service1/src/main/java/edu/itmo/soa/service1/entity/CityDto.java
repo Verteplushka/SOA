@@ -19,13 +19,13 @@ public class CityDto extends RepresentationModel<CityDto> {
     private String name;
     private Coordinates coordinates;
     @JacksonXmlProperty
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-mm-dd'T'HH:mm:ss.SSSX")
     private ZonedDateTime creationDate;
     private Integer area;
     private long population;
     private Integer metersAboveSeaLevel;
     @JacksonXmlProperty
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-mm-dd'T'HH:mm:ss")
     private LocalDateTime establishmentDate;
     private Float populationDensity;
     private Government government;

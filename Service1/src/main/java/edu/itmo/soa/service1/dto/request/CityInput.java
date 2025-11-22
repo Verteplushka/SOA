@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 
 @Data
 public class CityInput {
-
     @NotBlank
     private String name;
 

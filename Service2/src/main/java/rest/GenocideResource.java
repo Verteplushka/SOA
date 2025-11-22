@@ -1,6 +1,9 @@
 package rest;
 
 import exception.ApiErrorException;
+import exception.EmptyCitiesListException;
+import exception.NetworkErrorException;
+import exception.NotFoundException;
 import model.*;
 import model.response.ErrorResponse;
 import model.response.PopulationResponse;
@@ -27,16 +30,18 @@ public class GenocideResource {
     public Response getCityById(@PathParam("id") int id) {
         try {
             City city = cityServiceClient.getCity(id);
-
-            if (city == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .entity(new ErrorResponse("NOT_FOUND", "Город с id " + id + " не найден"))
-                        .build();
-            }
             return Response.ok(city).build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponse("NOT_FOUND", "Город с id " + id + " не найден"))
+                    .build();
         } catch (ApiErrorException e) {
             return Response.serverError()
                     .entity(new ErrorResponse("SERVICE1_API_ERROR", e.getMessage()))
+                    .build();
+        } catch (NetworkErrorException e) {
+            return Response.serverError()
+                    .entity(new ErrorResponse("SERVICE1_CONNECTION_ERROR", e.getMessage()))
                     .build();
         }
     }
@@ -47,25 +52,26 @@ public class GenocideResource {
             @PathParam("id1") int id1,
             @PathParam("id2") int id2,
             @PathParam("id3") int id3) {
-
         try {
             City c1 = cityServiceClient.getCity(id1);
             City c2 = cityServiceClient.getCity(id2);
             City c3 = cityServiceClient.getCity(id3);
 
-            if (c1 == null || c2 == null || c3 == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .entity(new ErrorResponse("NOT_FOUND", "Один или несколько городов не найдены"))
-                        .build();
-            }
-
             long totalPopulation = c1.getPopulation() + c2.getPopulation() + c3.getPopulation();
             PopulationResponse result = new PopulationResponse();
             result.setTotalPopulation(totalPopulation);
             return Response.ok(result).build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponse("NOT_FOUND", "Один или несколько городов не найдены"))
+                    .build();
         } catch (ApiErrorException e) {
             return Response.serverError()
                     .entity(new ErrorResponse("SERVICE1_API_ERROR", e.getMessage()))
+                    .build();
+        } catch (NetworkErrorException e) {
+            return Response.serverError()
+                    .entity(new ErrorResponse("SERVICE1_CONNECTION_ERROR", e.getMessage()))
                     .build();
         }
     }
@@ -75,19 +81,7 @@ public class GenocideResource {
     public Response moveToPoorest(@PathParam("id") int sourceId) {
         try {
             List<City> cities = cityServiceClient.getAllCities();
-
-            if (cities.isEmpty()) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .entity(new ErrorResponse("NOT_FOUND", "Нет доступных городов"))
-                        .build();
-            }
-
             City source = cityServiceClient.getCity(sourceId);
-            if (source == null) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .entity(new ErrorResponse("NOT_FOUND", "Исходный город не найден"))
-                        .build();
-            }
 
             City poorest = cities.stream()
                     .filter(c -> c.getId() != source.getId())
@@ -107,19 +101,28 @@ public class GenocideResource {
 
             poorest.setPopulation(poorest.getPopulation() + source.getPopulation());
             source.setPopulation(0);
-
             cityServiceClient.updateCity(poorest);
             cityServiceClient.updateCity(source);
 
             RelocationResponse response = new RelocationResponse();
             response.setSourceCity(source);
             response.setTargetCity(poorest);
-
             return Response.ok(response).build();
-
+        } catch (EmptyCitiesListException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponse("NOT_FOUND", "Нет доступных городов"))
+                    .build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponse("NOT_FOUND", "Исходный город не найден"))
+                    .build();
         } catch (ApiErrorException e) {
             return Response.serverError()
                     .entity(new ErrorResponse("SERVICE1_API_ERROR", e.getMessage()))
+                    .build();
+        } catch (NetworkErrorException e) {
+            return Response.serverError()
+                    .entity(new ErrorResponse("SERVICE1_CONNECTION_ERROR", e.getMessage()))
                     .build();
         }
     }

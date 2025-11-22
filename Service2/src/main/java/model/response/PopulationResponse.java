@@ -8,5 +8,4 @@ import lombok.Data;
 @Data
 public class PopulationResponse {
     private long totalPopulation;
-
 }
