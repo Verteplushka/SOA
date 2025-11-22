@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { addCity, getCity, toXml } from "../api/api-service1";
-import { XMLParser } from "fast-xml-parser";
 import {
   governmentOptions,
   getGovernmentKey,
 } from "../utils/government-localizator";
 
-const MAX_DATE = "2025-11-08";
+const MAX_DATE = new Date().toISOString().split("T")[0];
 const MAX_INT_LENGTH = 9;
 const MAX_DOUBLE_INT = 10;
 const MAX_DOUBLE_DEC = 10;
@@ -52,7 +51,7 @@ function CityForm({ existingCity }) {
     if (id) {
       getCity(id)
         .then((res) => {
-          const data = res.City;
+          const data = res.city;
           setCity({
             name: data.name,
             coordinates: {
@@ -68,7 +67,10 @@ function CityForm({ existingCity }) {
             governor: { age: data.governor.age || 0 },
           });
         })
-        .catch(() => setError("Не удалось загрузить данные города"));
+        .catch((e) => {
+          console.error(e);
+          setError("Не удалось загрузить данные города");
+        });
     }
   }, [id]);
 
@@ -255,7 +257,6 @@ function CityForm({ existingCity }) {
 
       <form onSubmit={handleSubmit}>
         <div className="row g-3">
-          {/* Название */}
           <div className="col-md-6">
             <label className="form-label">Название города</label>
             <input
