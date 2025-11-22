@@ -93,11 +93,6 @@ public class GenocideResource {
                         .entity(new ErrorResponse("INVALID_OPERATION", "Нет подходящего города для переселения"))
                         .build();
             }
-            if (source.getId() == poorest.getId()) {
-                return Response.status(Response.Status.BAD_REQUEST)
-                        .entity(new ErrorResponse("INVALID_OPERATION", "Самый бедный город и город для переселения совпадают"))
-                        .build();
-            }
 
             poorest.setPopulation(poorest.getPopulation() + source.getPopulation());
             source.setPopulation(0);
