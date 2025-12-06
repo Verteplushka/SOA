@@ -13,6 +13,7 @@ import edu.itmo.soa.service1.exception.InvalidCityDataException;
 import edu.itmo.soa.service1.CityServiceRemote;
 import edu.itmo.soa.service1.util.CityMapper;
 import jakarta.annotation.PostConstruct;
+import jakarta.ejb.EJBException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -37,6 +38,9 @@ public class CityController {
             InitialContext ctx = new InitialContext();
             Object obj = ctx.lookup("java:jboss/exported/service1-ejb-1.0-SNAPSHOT/CityServiceBean!edu.itmo.soa.service1.CityServiceRemote");
             this.cityService = (CityServiceRemote) obj;
+            System.out.println(com.fasterxml.jackson.databind.ObjectMapper.class.getProtectionDomain()
+                    .getCodeSource().getLocation());
+
         } catch (Exception e) {
             throw new RuntimeException("Failed to lookup EJB", e);
         }
@@ -174,6 +178,27 @@ public class CityController {
                 .contentType(MediaType.APPLICATION_XML)
                 .body(new ErrorResponse("NOT_FOUND", exception.getMessage(), ZonedDateTime.now()));
     }
+
+    @ExceptionHandler(EJBException.class)
+    public ResponseEntity<ErrorResponse> handleEJBException(EJBException exception) {
+        Throwable cause = exception.getCause();
+        if (cause instanceof CityNotFoundException) {
+            CityNotFoundException ex = (CityNotFoundException) cause;
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body(new ErrorResponse("CITY_NOT_FOUND", ex.getMessage(), ZonedDateTime.now()));
+        } else if (cause instanceof CityAlreadyExistsException) {
+            CityAlreadyExistsException ex = (CityAlreadyExistsException) cause;
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body(new ErrorResponse("CITY_ALREADY_EXISTS", ex.getMessage(), ZonedDateTime.now()));
+        }
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(MediaType.APPLICATION_XML)
+                .body(new ErrorResponse("EJB_EXCEPTION", exception.getMessage(), ZonedDateTime.now()));
+    }
+
 
     private void addLinksToCitiesDto(List<CityDto> citiesDto) {
         for (CityDto city : citiesDto) {

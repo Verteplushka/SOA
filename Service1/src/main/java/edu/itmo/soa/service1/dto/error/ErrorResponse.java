@@ -7,17 +7,18 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JacksonXmlRootElement(localName = "error")
-public class ErrorResponse {
+public class ErrorResponse implements Serializable {
     private String error;
     private String message;
     @JacksonXmlProperty
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-mm-dd'T'hh:mm:ss.SSSX")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'hh:mm:ss.SSSX")
     private ZonedDateTime timestamp;
 }
 

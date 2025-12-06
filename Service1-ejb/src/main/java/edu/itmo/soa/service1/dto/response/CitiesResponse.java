@@ -3,10 +3,11 @@ package edu.itmo.soa.service1.dto.response;
 import com.fasterxml.jackson.dataformat.xml.annotation.*;
 import edu.itmo.soa.service1.entity.CityDto;
 
+import java.io.Serializable;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "citiesResponse")
-public class CitiesResponse {
+public class CitiesResponse implements Serializable {
 
     @JacksonXmlElementWrapper(localName = "cities")
     @JacksonXmlProperty(localName = "city")

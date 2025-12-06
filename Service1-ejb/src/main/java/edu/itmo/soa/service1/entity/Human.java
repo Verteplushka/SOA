@@ -4,13 +4,15 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name = "humans")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Human {
+public class Human implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
