@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.example</groupId>
   <artifactId>NewService2</artifactId>
-  <packaging>war</packaging>
+  <packaging>pom</packaging>
   <version>1.0-SNAPSHOT</version>
   <name>NewService2 Maven Webapp</name>
   <url>http://maven.apache.org</url>
@@ -11,6 +11,7 @@
     <module>eureka-server</module>
     <module>eureka-client</module>
     <module>api-gateway</module>
+    <module>config-server</module>
   </modules>
   <dependencies>
     <dependency>
