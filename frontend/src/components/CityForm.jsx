@@ -52,7 +52,7 @@ function CityForm({ existingCity }) {
     if (id) {
       getCity(id)
         .then((res) => {
-          const data = res.City;
+          const data = res.city;
           setCity({
             name: data.name,
             coordinates: {
