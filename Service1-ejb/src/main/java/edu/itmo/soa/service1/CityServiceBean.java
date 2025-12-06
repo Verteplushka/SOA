@@ -65,27 +65,17 @@ public class CityServiceBean implements CityServiceRemote {
     @Override
     public City updateCity(int id, CityInput input) {
         validateCityInput(input);
-
         City existing = findById(id);
-
-        existing.setName(input.getName());
-        existing.setCoordinates(new Coordinates(
-                input.getCoordinates().getX(),
-                input.getCoordinates().getY()
-        ));
-        existing.setArea(input.getArea());
-        existing.setPopulation(input.getPopulation());
-        existing.setMetersAboveSeaLevel(input.getMetersAboveSeaLevel());
-        existing.setEstablishmentDate(input.getEstablishmentDate());
-        existing.setPopulationDensity(input.getPopulationDensity());
-        existing.setGovernment(input.getGovernment());
-        existing.setGovernor(new Human(input.getGovernor().getAge()));
-
+        if (existing == null) throw new CityNotFoundException("ID", id);
+        CityMapper.copyFields(input, existing);
         return em.merge(existing);
     }
 
     @Override
     public void deleteById(int id) {
+        City cityToDelete = findById(id);
+        if (cityToDelete == null) throw new CityNotFoundException("ID", id);
+        em.remove(cityToDelete);
     }
 
     @Override

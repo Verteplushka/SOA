@@ -16,6 +16,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.ejb.EJBException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -150,35 +151,6 @@ public class CityController {
         return ResponseEntity.ok(response);
     }
 
-
-    @ExceptionHandler(CityNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleCityNotFoundById(CityNotFoundException exception) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .contentType(MediaType.APPLICATION_XML)
-                .body(new ErrorResponse("NOT_FOUND", exception.getMessage(), ZonedDateTime.now()));
-    }
-
-    @ExceptionHandler(InvalidCityDataException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidCityData(InvalidCityDataException exception) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .contentType(MediaType.APPLICATION_XML)
-                .body(new ErrorResponse("BAD_REQUEST", exception.getMessage(), ZonedDateTime.now()));
-    }
-
-    @ExceptionHandler(CityAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleCityAlreadyExists(CityAlreadyExistsException exception) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .contentType(MediaType.APPLICATION_XML)
-                .body(new ErrorResponse("CONFLICT", exception.getMessage(), ZonedDateTime.now()));
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException exception) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .contentType(MediaType.APPLICATION_XML)
-                .body(new ErrorResponse("NOT_FOUND", exception.getMessage(), ZonedDateTime.now()));
-    }
-
     @ExceptionHandler(EJBException.class)
     public ResponseEntity<ErrorResponse> handleEJBException(EJBException exception) {
         Throwable cause = exception.getCause();
@@ -192,6 +164,16 @@ public class CityController {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .contentType(MediaType.APPLICATION_XML)
                     .body(new ErrorResponse("CITY_ALREADY_EXISTS", ex.getMessage(), ZonedDateTime.now()));
+        } else if (cause instanceof InvalidCityDataException) {
+            InvalidCityDataException ex = (InvalidCityDataException) cause;
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body(new ErrorResponse("BAD_REQUEST", ex.getMessage(), ZonedDateTime.now()));
+        } else if (cause instanceof IllegalArgumentException) {
+            IllegalArgumentException ex = (IllegalArgumentException) cause;
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body(new ErrorResponse("NOT_FOUND", ex.getMessage(), ZonedDateTime.now()));
         }
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

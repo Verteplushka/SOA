@@ -21,7 +21,6 @@ public class City implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Positive
     private int id;
 
     @NotBlank
