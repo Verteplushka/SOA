@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import lombok.*;
-import org.springframework.hateoas.RepresentationModel;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -14,7 +13,7 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CityDto extends RepresentationModel<CityDto> {
+public class CityDto {
     private int id;
     private String name;
     private Coordinates coordinates;

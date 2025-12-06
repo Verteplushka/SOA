@@ -10,14 +10,16 @@ import edu.itmo.soa.service1.entity.CityDto;
 import edu.itmo.soa.service1.exception.CityAlreadyExistsException;
 import edu.itmo.soa.service1.exception.CityNotFoundException;
 import edu.itmo.soa.service1.exception.InvalidCityDataException;
-import edu.itmo.soa.service1.service.CityService;
+import edu.itmo.soa.service1.CityServiceRemote;
 import edu.itmo.soa.service1.util.CityMapper;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import javax.naming.InitialContext;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
@@ -27,12 +29,17 @@ import java.util.List;
 @RestController
 @RequestMapping(value = "/cities", produces = MediaType.APPLICATION_XML_VALUE)
 public class CityController {
+    private CityServiceRemote cityService;
 
-    private final CityService cityService;
-
-    @Autowired
-    public CityController(CityService cityService) {
-        this.cityService = cityService;
+    @PostConstruct
+    public void init() {
+        try {
+            InitialContext ctx = new InitialContext();
+            Object obj = ctx.lookup("java:jboss/exported/service1-ejb-1.0-SNAPSHOT/CityServiceBean!edu.itmo.soa.service1.CityServiceRemote");
+            this.cityService = (CityServiceRemote) obj;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to lookup EJB", e);
+        }
     }
 
     @GetMapping("/{id}")
@@ -89,11 +96,11 @@ public class CityController {
             addLinksToCitiesDto(response.getCities());
             response.add(linkTo(methodOn(CityController.class).searchCities(request)).withSelfRel());
 
-            if(response.getPagination().getCurrentPage() > 0) {
+            if (response.getPagination().getCurrentPage() > 0) {
                 response.add(linkTo(methodOn(CityController.class).searchCities(null)).withRel("prevPage"));
             }
 
-            if(response.getPagination().getCurrentPage() < response.getPagination().getTotalPages() - 1) {
+            if (response.getPagination().getCurrentPage() < response.getPagination().getTotalPages() - 1) {
                 response.add(linkTo(methodOn(CityController.class).searchCities(null)).withRel("nextPage"));
             }
 

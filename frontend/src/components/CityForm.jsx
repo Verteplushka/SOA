@@ -35,15 +35,12 @@ function CityForm({ existingCity }) {
 
   const parseEstablishmentDate = (value) => {
     if (!value) return "";
-    if (Array.isArray(value)) {
-      const [year, month, day] = value;
-      if (year && month && day) {
-        const mm = String(month).padStart(2, "0");
-        const dd = String(day).padStart(2, "0");
-        return `${year}-${mm}-${dd}`;
-      }
+
+    if (typeof value === "string") {
+      const datePart = value.split("T")[0];
+      return datePart;
     }
-    if (typeof value === "string") return value.slice(0, 10);
+
     return "";
   };
 
@@ -52,6 +49,7 @@ function CityForm({ existingCity }) {
       getCity(id)
         .then((res) => {
           const data = res.city;
+          console.log("DATA:", data);
           setCity({
             name: data.name,
             coordinates: {
