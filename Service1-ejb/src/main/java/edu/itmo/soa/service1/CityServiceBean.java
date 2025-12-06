@@ -14,7 +14,12 @@ import edu.itmo.soa.service1.util.CityMapper;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.annotation.PostConstruct;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -26,6 +31,32 @@ import java.util.List;
 public class CityServiceBean implements CityServiceRemote {
     @PersistenceContext(unitName = "CityPU")
     private EntityManager em;
+
+    @PostConstruct
+    public void registerInConsul() {
+        try {
+            String serviceJson = "{"
+                    + "\"ID\": \"service1\","
+                    + "\"Name\": \"service1\","
+                    + "\"Address\": \"localhost\","
+                    + "\"Port\": 8080,"
+                    + "\"Tags\": [\"ejb\",\"remote\"]"
+                    + "}";
+
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:8500/v1/agent/service/register"))
+                    .header("Content-Type", "application/json")
+                    .PUT(HttpRequest.BodyPublishers.ofString(serviceJson))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println("Consul registration response: " + response.body());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     @Override
     public City findById(int id) {

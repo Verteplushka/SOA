@@ -1,5 +1,6 @@
 package edu.itmo.soa.service1.ctrl;
 
+import edu.itmo.soa.service1.consul.ServiceDiscoveryClient;
 import edu.itmo.soa.service1.dto.request.CityInput;
 import edu.itmo.soa.service1.dto.request.CitySearchRequest;
 import edu.itmo.soa.service1.dto.response.CitiesResponse;
@@ -15,33 +16,52 @@ import edu.itmo.soa.service1.util.CityMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.ejb.EJBException;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.Context;
 import javax.naming.InitialContext;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Properties;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping(value = "/cities", produces = MediaType.APPLICATION_XML_VALUE)
 public class CityController {
     private CityServiceRemote cityService;
+    private final ServiceDiscoveryClient discoveryClient;
+    private static final Logger log = Logger.getLogger("CityController");
+
+
+    @Autowired
+    public CityController(ServiceDiscoveryClient discoveryClient) {
+        this.discoveryClient = discoveryClient;
+    }
 
     @PostConstruct
     public void init() {
         try {
+//            props.put(Context.PROVIDER_URL, "http-remoting://localhost:8080");
+//            props.put(Context.SECURITY_PRINCIPAL, "ejb-user");
+//            props.put(Context.SECURITY_CREDENTIALS, "12345678");
+
+            log.info("info ale");
+            log.warning("warn ale");
+//            String providerUrl = discoveryClient.getService1ProviderUrl();
+//            Properties props = new Properties();
+//            props.put(Context.PROVIDER_URL, providerUrl);
+//            props.put(Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
+
             InitialContext ctx = new InitialContext();
             Object obj = ctx.lookup("java:jboss/exported/service1-ejb-1.0-SNAPSHOT/CityServiceBean!edu.itmo.soa.service1.CityServiceRemote");
             this.cityService = (CityServiceRemote) obj;
-            System.out.println(com.fasterxml.jackson.databind.ObjectMapper.class.getProtectionDomain()
-                    .getCodeSource().getLocation());
-
         } catch (Exception e) {
             throw new RuntimeException("Failed to lookup EJB", e);
         }
