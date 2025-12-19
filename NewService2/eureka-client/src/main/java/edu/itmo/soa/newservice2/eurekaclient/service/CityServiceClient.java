@@ -1,17 +1,21 @@
 package edu.itmo.soa.newservice2.eurekaclient.service;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import edu.itmo.soa.newservice2.eurekaclient.exception.*;
 import edu.itmo.soa.newservice2.eurekaclient.model.*;
 import edu.itmo.soa.newservice2.eurekaclient.model.request.CitySearchRequest;
 import edu.itmo.soa.newservice2.eurekaclient.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.*;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -73,8 +77,29 @@ public class CityServiceClient {
     public City updateCity(City city) {
         try {
             CityInput input = CityMapper.toCityInput(city);
+
+
+            XmlMapper xmlMapper = new XmlMapper();
+            xmlMapper.registerModule(new JaxbAnnotationModule());
+            xmlMapper.registerModule(new JavaTimeModule());
+            xmlMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+            String xmlBody = xmlMapper.writeValueAsString(input);
+            System.out.println("CityInput XML: " + xmlBody);
+
             String u = url("cities/" + city.getId());
-            ResponseEntity<City> resp = tpl().exchange(u, HttpMethod.PUT, new HttpEntity<>(input), City.class);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_XML);
+
+            HttpEntity<String> entity = new HttpEntity<>(xmlBody, headers);
+
+            System.out.println("PUT URL: " + u);
+            System.out.println("Headers: " + headers);
+
+            ResponseEntity<City> resp =
+                    tpl().exchange(u, HttpMethod.PUT, entity, City.class);
+
             if (resp.getStatusCode().is2xxSuccessful()) {
                 City updated = resp.getBody();
                 if (updated == null) throw new NotFoundException("Service1 returned an empty city");
@@ -86,14 +111,20 @@ public class CityServiceClient {
             } else {
                 throw new ApiErrorException("Unknown response from Service1: status " + resp.getStatusCode());
             }
+
         } catch (HttpClientErrorException.BadRequest e) {
+            System.out.println("HTTP Status: " + e.getStatusCode());
+            System.out.println("Response body: " + e.getResponseBodyAsString());
             throw new InvalidRequestException("Provided an invalid request!");
         } catch (ResourceAccessException e) {
             throw new NetworkErrorException(e.getMessage());
         } catch (RestClientException e) {
             throw new ApiErrorException(e.getMessage());
+        } catch (JsonProcessingException e) {
+            throw new ApiErrorException("XML serialization error: " + e.getMessage());
         }
     }
+
 
     @SuppressWarnings("unchecked")
     public List<City> getAllCities() {
@@ -105,7 +136,15 @@ public class CityServiceClient {
             request.setSort(sort);
 
             String u = url("cities/search");
-            ResponseEntity<CityPageResponse> resp = tpl().postForEntity(u, request, CityPageResponse.class);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_XML);
+
+            HttpEntity<CitySearchRequest> entity =
+                    new HttpEntity<>(request, headers);
+
+            ResponseEntity<CityPageResponse> resp =
+                    tpl().exchange(u, HttpMethod.POST, entity, CityPageResponse.class);
+
             if (resp.getStatusCode().is2xxSuccessful()) {
                 CityPageResponse page = resp.getBody();
                 if (page == null) throw new ApiErrorException("Got empty cityPage");
