@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss-deployment-structure>
+    <deployment>
+        <exclusions>
+            <module name="com.fasterxml.jackson.core"/>
+            <module name="com.fasterxml.jackson.databind"/>
+            <module name="com.fasterxml.jackson.annotation"/>
+            <module name="com.fasterxml.jackson.jaxrs"/>
+            <module name="com.fasterxml.jackson.module.jaxb"/>
+        </exclusions>
+    </deployment>
+</jboss-deployment-structure>

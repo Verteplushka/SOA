@@ -1,8 +1,10 @@
 package edu.itmo.soa.service1.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
+
+import java.io.Serializable;
 
 @Entity
 @Table(name = "humans")
@@ -10,13 +12,13 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Human {
+public class Human implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
+    @NotNull
     private int age;
 
     public Human(int  age) {

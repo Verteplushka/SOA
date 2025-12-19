@@ -7,10 +7,11 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
-public class CityInput {
+public class CityInput implements Serializable {
     @NotBlank
     private String name;
 
@@ -38,7 +39,7 @@ public class CityInput {
     private HumanInput governor;
 
     @Data
-    public static class CoordinatesInput {
+    public static class CoordinatesInput implements Serializable {
         @NotNull
         private Double x;
         @NotNull
@@ -46,7 +47,7 @@ public class CityInput {
     }
 
     @Data
-    public static class HumanInput {
+    public static class HumanInput implements Serializable {
         @Positive
         private int age;
     }

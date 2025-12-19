@@ -2,7 +2,12 @@ package edu.itmo.soa.service1.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
 
 @Entity
 @Table(name = "coordinates")
@@ -10,7 +15,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Coordinates {
+public class Coordinates implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
