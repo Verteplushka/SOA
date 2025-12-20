@@ -1,5 +1,6 @@
 package edu.itmo.soa.service1.consul;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -9,7 +10,7 @@ public class ServiceDiscoveryClient {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public String getService1ProviderUrl() {
-        String url = "http://localhost:8500/v1/catalog/service/service1";
+        String url = "http://localhost:8500/v1/catalog/service/service1-ejb";
         ServiceInfo[] services = restTemplate.getForObject(url, ServiceInfo[].class);
         if (services != null && services.length > 0) {
             return "http-remoting://" + services[0].getServiceAddress() + ":" + services[0].getServicePort();
@@ -18,7 +19,9 @@ public class ServiceDiscoveryClient {
     }
 
     public static class ServiceInfo {
+        @JsonProperty("ServiceAddress")
         private String ServiceAddress;
+        @JsonProperty("ServicePort")
         private int ServicePort;
 
         public String getServiceAddress() { return ServiceAddress; }
