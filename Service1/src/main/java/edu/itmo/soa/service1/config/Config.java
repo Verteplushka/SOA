@@ -9,6 +9,6 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 @EnableWebMvc
 @Configuration
 @ComponentScan("edu.itmo.soa.service1")
-@Import({WebConfig.class})
+@Import({WebConfig.class, SchedulerConfig.class})
 public class Config {
 }

@@ -130,7 +130,7 @@
   </dependencies>
 
   <build>
-    <finalName>Service1Dev</finalName>
+    <finalName>Service1</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
