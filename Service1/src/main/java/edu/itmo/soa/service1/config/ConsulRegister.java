@@ -1,22 +1,22 @@
-package edu.itmo.soa.service1;
+package edu.itmo.soa.service1.config;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.ejb.Singleton;
-import jakarta.ejb.Startup;
-import org.jboss.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-@Singleton
-@Startup
+@Component
 public class ConsulRegister {
-    private static final Logger log = Logger.getLogger(ConsulRegister.class);
+
+    private static final Logger log = LoggerFactory.getLogger(ConsulRegister.class);
 
     @PostConstruct
-    private void registerService() {
+    public void registerService() {
         try {
             String serviceJson = generateBody();
 
@@ -28,16 +28,16 @@ public class ConsulRegister {
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            log.info("Consul registration response: " + response.body());
+            log.info("Consul registration response: {}", response.body());
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("Error registering service in Consul", e);
         }
     }
 
-    private static String generateBody(){
-        String serviceId = "service1-ejb";
-        String serviceName = "service1-ejb";
-        int servicePort = 8080;
+    private String generateBody() {
+        String serviceId = "service1-client";
+        String serviceName = "service1-client";
+        int servicePort = 8545;
         String serviceAddress = "localhost";
 
         return "{"
@@ -45,7 +45,7 @@ public class ConsulRegister {
                 + "\"Name\": \"" + serviceName + "\","
                 + "\"Address\": \"" + serviceAddress + "\","
                 + "\"Port\": " + servicePort + ","
-                + "\"Tags\": [\"ejb\",\"remote\"]"
+                + "\"Tags\": [\"spring\",\"client\"]"
                 + "}";
     }
 }

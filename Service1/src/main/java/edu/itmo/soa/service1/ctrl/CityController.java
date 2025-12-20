@@ -39,36 +39,33 @@ public class CityController {
     private final ServiceDiscoveryClient discoveryClient;
     private static final Logger log = Logger.getLogger("CityController");
 
-
     @Autowired
     public CityController(ServiceDiscoveryClient discoveryClient) {
         this.discoveryClient = discoveryClient;
     }
 
     @PostConstruct
-    public void init() {
+    private void lookupCityService() {
         try {
-//            props.put(Context.PROVIDER_URL, "http-remoting://localhost:8080");
-//            props.put(Context.SECURITY_PRINCIPAL, "ejb-user");
-//            props.put(Context.SECURITY_CREDENTIALS, "12345678");
+            String providerUrl = discoveryClient.getService1ProviderUrl();
+            log.info(providerUrl);
+            Properties props = new Properties();
+            props.put(Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
+            props.put(Context.PROVIDER_URL, providerUrl);
 
-            log.info("info ale");
-            log.warning("warn ale");
-//            String providerUrl = discoveryClient.getService1ProviderUrl();
-//            Properties props = new Properties();
-//            props.put(Context.PROVIDER_URL, providerUrl);
-//            props.put(Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
-
-            InitialContext ctx = new InitialContext();
-            Object obj = ctx.lookup("java:jboss/exported/service1-ejb-1.0-SNAPSHOT/CityServiceBean!edu.itmo.soa.service1.CityServiceRemote");
+            InitialContext ctx = new InitialContext(props);
+            Object obj = ctx.lookup("ejb:/service1-ejb-1.0-SNAPSHOT/CityServiceBean!edu.itmo.soa.service1.CityServiceRemote");
             this.cityService = (CityServiceRemote) obj;
         } catch (Exception e) {
+            log.warning("Could not lookup EJB");
             throw new RuntimeException("Failed to lookup EJB", e);
         }
     }
 
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getCityById(@PathVariable("id") int id) {
+        lookupCityService();
         City city = cityService.findById(id);
         CityDto cityDto = CityMapper.toCityDto(city);
 
@@ -82,6 +79,7 @@ public class CityController {
 
     @PostMapping(consumes = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<?> createCity(@Valid @RequestBody CityInput input) {
+        lookupCityService();
         City saved = cityService.createCity(input);
         CityDto cityDto = CityMapper.toCityDto(saved);
 
@@ -96,6 +94,7 @@ public class CityController {
 
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<?> updateCity(@PathVariable("id") int id, @Valid @RequestBody CityInput input) {
+        lookupCityService();
         City updated = cityService.updateCity(id, input);
         CityDto cityDto = CityMapper.toCityDto(updated);
 
@@ -109,6 +108,7 @@ public class CityController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCityById(@PathVariable("id") int id) {
+        lookupCityService();
         cityService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
@@ -116,6 +116,7 @@ public class CityController {
     @PostMapping(value = "/search", consumes = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<?> searchCities(@RequestBody CitySearchRequest request) {
         try {
+            lookupCityService();
             CityPageResponse response = cityService.searchCities(request);
 
             addLinksToCitiesDto(response.getCities());
@@ -142,12 +143,14 @@ public class CityController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ErrorResponse("BAD_REQUEST", "Параметр metersAboveSeaLevel не может быть пустой", ZonedDateTime.now()));
         }
+        lookupCityService();
         cityService.deleteByMetersAboveSeaLevel(meters);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/by-name-prefix")
     public ResponseEntity<?> getCitiesByNamePrefix(@RequestParam("prefix") String prefix) {
+        lookupCityService();
         CitiesResponse response = cityService.findByNamePrefix(prefix);
 
         addLinksToCitiesDto(response.getCities());
@@ -162,7 +165,7 @@ public class CityController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ErrorResponse("BAD_REQUEST", "Параметр age не может быть пустой", ZonedDateTime.now()));
         }
-
+        lookupCityService();
         CitiesResponse response = cityService.getCitiesByGovernorAge(age);
 
         addLinksToCitiesDto(response.getCities());
@@ -195,6 +198,8 @@ public class CityController {
                     .contentType(MediaType.APPLICATION_XML)
                     .body(new ErrorResponse("NOT_FOUND", ex.getMessage(), ZonedDateTime.now()));
         }
+
+
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .contentType(MediaType.APPLICATION_XML)
