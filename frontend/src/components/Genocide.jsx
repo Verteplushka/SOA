@@ -37,6 +37,22 @@ export default function Genocide() {
     setValidationErrors((prev) => ({ ...prev, [key]: error }));
     return error === "";
   };
+  const formatEstablishmentDate = (city) => {
+    if (!city.establishmentDate) return "";
+
+    // Если это массив или строка с запятыми
+    const parts = Array.isArray(city.establishmentDate)
+        ? city.establishmentDate
+        : city.establishmentDate.toString().split(",");
+
+    if (parts.length < 3) return ""; // нет полного года-месяц-день
+
+    const [year, month, day] = parts.map((p) => Number(p));
+    if ([year, month, day].some((n) => isNaN(n))) return "";
+
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  };
+
 
   const handleIdChange = (key, value) => {
     setIds((prev) => ({ ...prev, [key]: value }));
@@ -108,9 +124,12 @@ export default function Genocide() {
 
         const formatCity = (city) => ({
           ...city,
-          creationDate: formatDate(city.creationDate),
-          establishmentDate: formatDate(city.establishmentDate),
+          creationDate: city.creationDate
+              ? new Date(city.creationDate * 1000).toLocaleString()
+              : "",
+          establishmentDate: formatEstablishmentDate(city),
         });
+
 
         setMoveResult([
           { ...formatCity(source), role: "Откуда" },
