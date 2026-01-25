@@ -12,6 +12,7 @@
     <module>eureka-client</module>
     <module>api-gateway</module>
     <module>config-server</module>
+    <module>REST_layer</module>
   </modules>
   <dependencies>
     <dependency>
