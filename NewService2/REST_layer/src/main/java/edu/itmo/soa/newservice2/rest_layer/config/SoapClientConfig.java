@@ -18,7 +18,7 @@ public class SoapClientConfig {
     @Bean
     public WebServiceTemplate webServiceTemplate(Jaxb2Marshaller marshaller) {
         WebServiceTemplate template = new WebServiceTemplate(marshaller);
-        //template.setDefaultUri("https://158.160.140.50:8766/eclient/genocide");
+        template.setDefaultUri("https://158.160.140.50:8766/eclient/genocide");
         return template;
     }
 }
