@@ -6,12 +6,17 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ws.client.core.WebServiceTemplate;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ws.soap.SoapMessage;
 import javax.xml.datatype.XMLGregorianCalendar;
+
 
 @RestController
 @RequestMapping("/genocide")
 public class GenocideProxyController {
+
+    private static final Logger log = LoggerFactory.getLogger(GenocideProxyController.class);
 
     private final WebServiceTemplate template;
     private final String soapUri;
@@ -34,17 +39,30 @@ public class GenocideProxyController {
         request.setId2(id2);
         request.setId3(id3);
 
-        CountPopulationResponse response = (CountPopulationResponse)
-                template.marshalSendAndReceive(soapUri, request);
+        try {
+            log.info("Calling SOAP countPopulation with ids: {}/{}/{}", id1, id2, id3);
 
-        String xml = String.format(
-                "<result><totalPopulation>%d</totalPopulation></result>",
-                response.getTotalPopulation()
-        );
+            CountPopulationResponse response = (CountPopulationResponse)
+                    template.marshalSendAndReceive(
+                            soapUri,
+                            request,
+                            message -> ((SoapMessage) message).setSoapAction("")  // как в твоём curl
+                    );
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_XML)
-                .body(xml);
+            String xml = String.format(
+                    "<result><totalPopulation>%d</totalPopulation></result>",
+                    response.getTotalPopulation()
+            );
+
+            log.info("SOAP response received, totalPopulation: {}", response.getTotalPopulation());
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_XML).body(xml);
+
+        } catch (Exception e) {
+            log.error("Error calling SOAP countPopulation", e);
+            return ResponseEntity.status(500)
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body("<error>SOAP call failed: " + e.getMessage() + "</error>");
+        }
     }
 
     @PostMapping(value = "/move-to-poorest/{id}",
@@ -54,24 +72,32 @@ public class GenocideProxyController {
         MoveToPoorestRequest request = new MoveToPoorestRequest();
         request.setSourceCityId(id);
 
-        MoveToPoorestResponse response = (MoveToPoorestResponse)
-                template.marshalSendAndReceive(soapUri, request);
+        try {
+            log.info("Calling SOAP moveToPoorest with sourceCityId: {}", id);
 
-        StringBuilder xml = new StringBuilder("<result>");
+            MoveToPoorestResponse response = (MoveToPoorestResponse)
+                    template.marshalSendAndReceive(
+                            soapUri,
+                            request,
+                            message -> ((SoapMessage) message).setSoapAction("")  // как в твоём curl
+                    );
 
-        xml.append("<sourceCity>");
-        xml.append(buildCityXml(response.getSourceCity()));
-        xml.append("</sourceCity>");
+            StringBuilder xml = new StringBuilder("<result>");
 
-        xml.append("<targetCity>");
-        xml.append(buildCityXml(response.getTargetCity()));
-        xml.append("</targetCity>");
+            xml.append("<sourceCity>").append(buildCityXml(response.getSourceCity())).append("</sourceCity>");
+            xml.append("<targetCity>").append(buildCityXml(response.getTargetCity())).append("</targetCity>");
 
-        xml.append("</result>");
+            xml.append("</result>");
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_XML)
-                .body(xml.toString());
+            log.info("SOAP moveToPoorest successful");
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_XML).body(xml.toString());
+
+        } catch (Exception e) {
+            log.error("Error calling SOAP moveToPoorest", e);
+            return ResponseEntity.status(500)
+                    .contentType(MediaType.APPLICATION_XML)
+                    .body("<error>SOAP call failed: " + e.getMessage() + "</error>");
+        }
     }
 
     private String buildCityXml(City city) {
@@ -85,11 +111,17 @@ public class GenocideProxyController {
         sb.append("<name>").append(escapeXml(city.getName())).append("</name>");
 
         Coordinates coords = city.getCoordinates();
-        sb.append("<coordinates>");
-        sb.append("<id>").append(coords.getId()).append("</id>");
-        sb.append("<x>").append(coords.getX()).append("</x>");
-        sb.append("<y>").append(coords.getY()).append("</y>");
-        sb.append("</coordinates>");
+        System.out.println(city);
+        System.out.println(coords);
+        if (coords != null) {
+            sb.append("<coordinates>");
+            sb.append("<id>").append(coords.getId()).append("</id>");
+            sb.append("<x>").append(coords.getX()).append("</x>");
+            sb.append("<y>").append(coords.getY()).append("</y>");
+            sb.append("</coordinates>");
+        }else{
+            sb.append("<coordinates>null</coordinates>");
+        }
 
         sb.append("<creationDate>").append(formatDate(city.getCreationDate())).append("</creationDate>");
 
