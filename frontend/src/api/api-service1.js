@@ -2,8 +2,7 @@ import axios from "axios";
 import { XMLParser, XMLBuilder } from "fast-xml-parser";
 
 const BASE_URL =
-  import.meta.env.VITE_API_BASE ||
-  "https://158.160.140.50:8766/service1/Service1";
+  import.meta.env.VITE_API_BASE || "https://158.160.138.235:8545/Service1";
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -68,21 +67,21 @@ export async function deleteCity(id) {
 
 export async function deleteByMeters(meters) {
   const res = await axiosInstance.delete(
-    `/cities/by-meters-above-sea-level?meters=${encodeURIComponent(meters)}`
+    `/cities/by-meters-above-sea-level?meters=${encodeURIComponent(meters)}`,
   );
   return res.status;
 }
 
 export async function byNamePrefix(prefix) {
   const res = await axiosInstance.get(
-    `/cities/by-name-prefix?prefix=${encodeURIComponent(prefix)}`
+    `/cities/by-name-prefix?prefix=${encodeURIComponent(prefix)}`,
   );
   return parseXml(res.data);
 }
 
 export async function byGovernorAge(age) {
   const res = await axiosInstance.get(
-    `/cities/by-governor-age?age=${encodeURIComponent(age)}`
+    `/cities/by-governor-age?age=${encodeURIComponent(age)}`,
   );
   return parseXml(res.data);
 }
