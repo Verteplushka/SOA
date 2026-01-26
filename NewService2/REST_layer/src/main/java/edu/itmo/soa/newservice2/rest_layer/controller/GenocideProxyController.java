@@ -1,5 +1,5 @@
 package edu.itmo.soa.newservice2.rest_layer.controller;
-
+import edu.itmo.soa.newservice2.rest_layer.util.CityXmlMapper;
 import com.example.soap.client.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -46,7 +46,7 @@ public class GenocideProxyController {
                     template.marshalSendAndReceive(
                             soapUri,
                             request,
-                            message -> ((SoapMessage) message).setSoapAction("")  // как в твоём curl
+                            message -> ((SoapMessage) message).setSoapAction("")
                     );
 
             String xml = String.format(
@@ -79,13 +79,13 @@ public class GenocideProxyController {
                     template.marshalSendAndReceive(
                             soapUri,
                             request,
-                            message -> ((SoapMessage) message).setSoapAction("")  // как в твоём curl
+                            message -> ((SoapMessage) message).setSoapAction("")
                     );
 
             StringBuilder xml = new StringBuilder("<result>");
 
-            xml.append("<sourceCity>").append(buildCityXml(response.getSourceCity())).append("</sourceCity>");
-            xml.append("<targetCity>").append(buildCityXml(response.getTargetCity())).append("</targetCity>");
+            xml.append("<sourceCity>").append(CityXmlMapper.toXml(response.getSourceCity())).append("</sourceCity>");
+            xml.append("<targetCity>").append(CityXmlMapper.toXml(response.getTargetCity())).append("</targetCity>");
 
             xml.append("</result>");
 
@@ -100,79 +100,4 @@ public class GenocideProxyController {
         }
     }
 
-    private String buildCityXml(City city) {
-        if (city == null) {
-            return "";
-        }
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("<id>").append(city.getId()).append("</id>");
-        sb.append("<name>").append(escapeXml(city.getName())).append("</name>");
-
-        Coordinates coords = city.getCoordinates();
-        System.out.println(city);
-        System.out.println(coords);
-        if (coords != null) {
-            sb.append("<coordinates>");
-            sb.append("<id>").append(coords.getId()).append("</id>");
-            sb.append("<x>").append(coords.getX()).append("</x>");
-            sb.append("<y>").append(coords.getY()).append("</y>");
-            sb.append("</coordinates>");
-        }else{
-            sb.append("<coordinates>null</coordinates>");
-        }
-
-        sb.append("<creationDate>").append(formatDate(city.getCreationDate())).append("</creationDate>");
-
-        Integer area = city.getArea();
-        if (area != null) {
-            sb.append("<area>").append(area).append("</area>");
-        }
-
-        sb.append("<population>").append(city.getPopulation()).append("</population>");
-
-        Integer meters = city.getMetersAboveSeaLevel();
-        if (meters != null) {
-            sb.append("<metersAboveSeaLevel>").append(meters).append("</metersAboveSeaLevel>");
-        }
-
-        sb.append("<establishmentDate>").append(formatDate(city.getEstablishmentDate())).append("</establishmentDate>");
-
-        Float density = city.getPopulationDensity();
-        if (density != null) {
-            sb.append("<populationDensity>").append(density).append("</populationDensity>");
-        }
-
-        Government gov = city.getGovernment();
-        if (gov != null) {
-            sb.append("<government>").append(gov.value()).append("</government>");
-        }
-
-        Human governor = city.getGovernor();
-        if (governor != null) {
-            sb.append("<governor>");
-            sb.append("<id>").append(governor.getId()).append("</id>");
-            sb.append("<age>").append(governor.getAge()).append("</age>");
-            sb.append("</governor>");
-        }
-
-        return sb.toString();
-    }
-
-    private String formatDate(XMLGregorianCalendar cal) {
-        if (cal == null) {
-            return "";
-        }
-        return cal.toXMLFormat();
-    }
-
-    private String escapeXml(String s) {
-        if (s == null) return "";
-        return s.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;")
-                .replace("'", "&apos;");
-    }
 }
