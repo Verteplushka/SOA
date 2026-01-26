@@ -28,27 +28,54 @@ export default function Genocide() {
 
   const validateInput = (key, value) => {
     let error = "";
-    if (!/^\d*$/.test(value)) {
+
+    if (value.trim() === "") {
+      error = "Поле не может быть пустым";
+    } else if (!/^\d+$/.test(value)) {
       error = "Разрешены только цифры";
     } else if (value.length > MAX_LENGTH) {
       error = `Максимальная длина — ${MAX_LENGTH} цифр`;
     }
+
     setValidationErrors((prev) => ({ ...prev, [key]: error }));
     return error === "";
   };
-  const formatEstablishmentDate = (city) => {
-    if (!city.establishmentDate) return "";
 
-    const parts = Array.isArray(city.establishmentDate)
-      ? city.establishmentDate
-      : city.establishmentDate.toString().split(",");
+  const formatEstablishmentDate = (value) => {
+    if (!value) return "";
 
-    if (parts.length < 3) return "";
+    let d;
 
-    const [year, month, day] = parts.map((p) => Number(p));
-    if ([year, month, day].some((n) => isNaN(n))) return "";
+    if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
+      d = new Date(value + "Z");
+    } else if (typeof value === "number") {
+      d = new Date(value * 1000);
+    } else if (Array.isArray(value)) {
+      const [y, m, d0] = value;
+      d = new Date(y, m - 1, d0);
+    } else {
+      d = new Date(value);
+    }
 
-    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    if (isNaN(d.getTime())) return "";
+
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
+  const formatCreationDate = (value) => {
+    if (!value) return "";
+
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return "";
+
+    return d.toLocaleString("ru-RU", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
   };
 
   const handleIdChange = (key, value) => {
@@ -85,7 +112,6 @@ export default function Genocide() {
 
     const valid = Object.keys(ids).every((k) => validateInput(k, ids[k]));
     if (!valid) {
-      setCountError("Проверьте правильность введённых ID");
       return;
     }
     checkDuplicateIds();
@@ -94,7 +120,7 @@ export default function Genocide() {
       const res = await genocideCount(ids.id1, ids.id2, ids.id3);
       console.log("Ответ сервера:", res);
 
-      const total = res.reulst?.totalPopulation ?? "0";
+      const total = res.result?.totalPopulation ?? "0";
       setTotalPopulation(total);
     } catch (e) {
       const msg = e.response?.data
@@ -109,7 +135,6 @@ export default function Genocide() {
     setMoveError(null);
 
     if (!validateInput("moveId", moveId)) {
-      setMoveError("Некорректный ID города");
       return;
     }
 
@@ -130,13 +155,15 @@ export default function Genocide() {
           return `${yyyy}-${mm}-${dd}`;
         };
 
+        console.log(source.establishmentDate);
+        console.log(target.establishmentDate);
         const formatCity = (city) => ({
           ...city,
-          creationDate: city.creationDate
-            ? new Date(city.creationDate * 1000).toLocaleString()
-            : "",
-          establishmentDate: formatEstablishmentDate(city),
+          creationDate: formatCreationDate(city.creationDate),
+          establishmentDate: formatEstablishmentDate(city.establishmentDate),
         });
+        console.log(formatCity(source).establishmentDate);
+        console.log(formatCity(target).establishmentDate);
 
         setMoveResult([
           { ...formatCity(source), role: "Откуда" },

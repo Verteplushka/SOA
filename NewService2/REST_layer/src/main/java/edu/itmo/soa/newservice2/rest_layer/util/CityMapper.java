@@ -3,6 +3,7 @@ package edu.itmo.soa.newservice2.rest_layer.util;
 import edu.itmo.soa.newservice2.rest_layer.dto.CityDto;
 import edu.itmo.soa.newservice2.rest_layer.dto.CoordinatesDto;
 import edu.itmo.soa.newservice2.rest_layer.dto.GovernorDto;
+import com.example.soap.client.*;
 
 public class CityMapper {
 

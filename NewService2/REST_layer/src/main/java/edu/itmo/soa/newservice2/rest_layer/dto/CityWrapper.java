@@ -7,19 +7,19 @@ import jakarta.xml.bind.annotation.*;
 public class CityWrapper {
 
     @XmlElement(name = "city")
-    private City city;
+    private CityDto city;
 
     public CityWrapper() {}
 
-    public CityWrapper(City city) {
+    public CityWrapper(CityDto city) {
         this.city = city;
     }
 
-    public City getCity() {
+    public CityDto getCity() {
         return city;
     }
 
-    public void setCity(City city) {
+    public void setCity(CityDto city) {
         this.city = city;
     }
 }

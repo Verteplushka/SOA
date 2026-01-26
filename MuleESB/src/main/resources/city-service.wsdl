@@ -6,13 +6,11 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     targetNamespace="http://itmo.edu/soa/genocide">
 
-    <!-- ===================== TYPES ===================== -->
     <wsdl:types>
         <xs:schema 
             targetNamespace="http://itmo.edu/soa/genocide"
             elementFormDefault="qualified">
 
-            <!-- Все типы здесь остаются без изменений -->
             <xs:simpleType name="Government">
                 <xs:restriction base="xs:string">
                     <xs:enumeration value="DIARCHY"/>
@@ -50,7 +48,6 @@
                 </xs:sequence>
             </xs:complexType>
 
-            <!-- Запросы/ответы остаются те же -->
             <xs:element name="GetCityRequest">
                 <xs:complexType>
                     <xs:sequence>
@@ -129,7 +126,6 @@
         </xs:schema>
     </wsdl:types>
 
-    <!-- MESSAGES, PORTTYPE, BINDING, SERVICE — без изменений -->
     <wsdl:message name="GetCityRequestMsg">
         <wsdl:part name="parameters" element="tns:GetCityRequest"/>
     </wsdl:message>

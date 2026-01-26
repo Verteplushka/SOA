@@ -2,6 +2,7 @@ package edu.itmo.soa.newservice2.rest_layer.controller;
 
 import com.example.soap.client.*;
 import edu.itmo.soa.newservice2.rest_layer.dto.*;
+import edu.itmo.soa.newservice2.rest_layer.util.CityMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,23 +68,28 @@ public class GenocideProxyController {
         request.setSourceCityId(id);
 
         try {
-            log.info("Calling SOAP moveToPoorest with sourceCityId={}", id);
-
             MoveToPoorestResponse response =
                     (MoveToPoorestResponse) template.marshalSendAndReceive(
                             soapUri,
                             request,
-                            msg -> ((SoapMessage) msg).setSoapAction("")
+                            m -> ((SoapMessage) m).setSoapAction("")
                     );
 
             MoveResultDto result = new MoveResultDto();
-            result.setSourceCity(new CityWrapper(response.getSourceCity()));
-            result.setTargetCity(new CityWrapper(response.getTargetCity()));
+            result.setSourceCity(
+                    new CityWrapper(
+                            CityMapper.fromSoap(response.getSourceCity())
+                    )
+            );
+            result.setTargetCity(
+                    new CityWrapper(
+                            CityMapper.fromSoap(response.getTargetCity())
+                    )
+            );
 
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
-            log.error("SOAP moveToPoorest failed", e);
             return ResponseEntity.status(404)
                     .body(new ErrorDto("Указанный город не найден"));
         }
