@@ -27,9 +27,6 @@ public class CityServiceClient {
         request.setId(id);
 
         GetCityResponse response = (GetCityResponse) webServiceTemplate.marshalSendAndReceive(request);
-        System.out.println(response);
-        System.out.println(response == null);
-        System.out.println(response.getCity());
 
         if (response == null || response.getCity() == null) {
             throw new NotFoundException("Couldn't find city with id = " + id);
