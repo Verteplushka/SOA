@@ -32,17 +32,14 @@
         <spring-cloud.version>2025.1.0</spring-cloud.version>
     </properties>
     <dependencies>
-        <!-- Jackson XML support (чтобы JAXB-аннотации работали) -->
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
         </dependency>
-        <!-- чтобы Jackson учитывал JAXB-аннотации -->
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-jaxb-annotations</artifactId>
         </dependency>
-        <!-- Spring MVC (servlet stack) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -55,7 +52,6 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
@@ -64,7 +60,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.32</version>
+            <version>1.18.34</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -78,12 +74,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-xml</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web-services</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ws</groupId>
+            <artifactId>spring-ws-core</artifactId>
         </dependency>
         <dependency>
             <groupId>wsdl4j</groupId>
@@ -135,6 +131,28 @@
                     </sources>
                     <packageName>edu.itmo.soa.newservice2.eurekaclient.model</packageName>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.sun.xml.ws</groupId>
+                <artifactId>jaxws-maven-plugin</artifactId>
+                <version>4.0.3</version>
+                <executions>
+                    <execution>
+                        <id>wsimport-genocide</id>
+                        <goals>
+                            <goal>wsimport</goal>
+                        </goals>
+                        <configuration>
+                            <wsdlFiles>
+                                <wsdlFile>${project.basedir}/src/main/resources/wsdl/city-service.wsdl</wsdlFile>
+                            </wsdlFiles>
+                            <packageName>edu.itmo.soa.newservice2.eurekaclient.client</packageName>
+                            <sourceDestDir>${project.build.directory}/generated-sources/jaxws</sourceDestDir>
+                            <verbose>true</verbose>
+                            <xnocompile>false</xnocompile>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

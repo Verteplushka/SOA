@@ -9,3 +9,10 @@ jetty*
 !**/src/test/**/target/
 keystore*
 commands.txt
+/bin/
+*.p12
+*.war
+soapUI
+*.project
+bin
+*.json

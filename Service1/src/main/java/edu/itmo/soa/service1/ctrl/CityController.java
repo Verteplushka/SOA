@@ -13,7 +13,6 @@ import edu.itmo.soa.service1.exception.CityNotFoundException;
 import edu.itmo.soa.service1.exception.InvalidCityDataException;
 import edu.itmo.soa.service1.CityServiceRemote;
 import edu.itmo.soa.service1.util.CityMapper;
-import jakarta.annotation.PostConstruct;
 import jakarta.ejb.EJBException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +43,6 @@ public class CityController {
         this.discoveryClient = discoveryClient;
     }
 
-    @PostConstruct
     private void lookupCityService() {
         try {
             String providerUrl = discoveryClient.getService1ProviderUrl();

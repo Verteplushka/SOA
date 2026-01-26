@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { addCity, getCity, toXml } from "../api/api-service1";
+import { addCity, getCity, toXml, updateCity } from "../api/api-service1";
 import {
   governmentOptions,
   getGovernmentKey,
@@ -228,11 +228,12 @@ function CityForm({ existingCity }) {
 
     try {
       if (editUrl) {
-        await fetch(editUrl, {
-          method: "PUT",
-          headers: { "Content-Type": "application/xml" },
-          body: toXml(cityToSend, "CityInput"),
-        });
+        // await fetch(editUrl, {
+        //   method: "PUT",
+        //   headers: { "Content-Type": "application/xml" },
+        //   body: toXml(cityToSend, "CityInput"),
+        // });
+        updateCity(cityToSend, existingCity?.id);
       } else {
         await addCity(cityToSend);
       }

@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+          http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+          http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+
+    <http:listener-config name="HTTP_Listener_config">
+        <http:listener-connection host="0.0.0.0" port="8081"/>
+    </http:listener-config>
+
+    <http:request-config name="Service1_Request_Config"
+                         basePath="/service1/Service1">
+        <http:request-connection
+            host="158.160.138.235"
+            port="8766"
+            protocol="HTTPS"/>
+    </http:request-config>
+
+    <flow name="soap-router-flow">
+        <http:listener config-ref="HTTP_Listener_config"
+                       path="/soap-integration"
+                       allowedMethods="POST"/>
+
+        <logger level="INFO" message="=== SOAP REQUEST RECEIVED ==="/>
+        <logger level="INFO" message="#[payload]"/>
+
+        <choice>
+            <when expression="#[payload.Envelope.Body.GetCityRequest != null]">
+                <logger level="INFO" message="Routing to GetCity"/>
+                <flow-ref name="getCity-subflow"/>
+            </when>
+
+            <when expression="#[payload.Envelope.Body.GetAllCitiesRequest != null]">
+                <logger level="INFO" message="Routing to GetAllCities"/>
+                <flow-ref name="getAllCities-subflow"/>
+            </when>
+
+            <when expression="#[payload.Envelope.Body.UpdateCityRequest != null]">
+                <logger level="INFO" message="Routing to UpdateCity"/>
+                <flow-ref name="updateCity-subflow"/>
+            </when>
+
+            <otherwise>
+                <logger level="ERROR" message="Unknown SOAP operation"/>
+                <set-payload mimeType="text/xml"
+                             value='#[%dw 2.0
+					output application/xml
+					ns soap http://schemas.xmlsoap.org/soap/envelope/
+					---
+					soap#Envelope: {
+					  soap#Body: {
+					    soap#Fault: {
+					      faultcode: "soap:Client",
+					      faultstring: "Unknown SOAP operation"
+					    }
+					  }
+					}
+					]'/>
+                <set-variable variableName="httpStatus" value="400"/>
+            </otherwise>
+        </choice>
+
+        <set-variable variableName="httpHeaders"
+                      value='#[{"Content-Type": "text/xml; charset=UTF-8"}]'/>
+        <set-variable variableName="httpStatus" value="#[vars.httpStatus default 200]"/>
+
+        <logger level="INFO" message="=== SOAP RESPONSE SENT ==="/>
+    </flow>
+
+	<sub-flow name="getCity-subflow">
+	    <set-variable variableName="cityId"
+	                  value="#[output application/java --- payload.Envelope.Body.GetCityRequest.id default 0]" />
+	    <logger level="INFO" message="Extracted cityId = #[vars.cityId]"/>
+	
+	    <http:request method="GET"
+	                  config-ref="Service1_Request_Config"
+	                  path="#['/cities/' ++ vars.cityId]" />
+	
+	    <logger level="INFO" message="=== REST RESPONSE (GetCity) ==="/>
+	    <logger level="INFO" message="#[payload]"/>
+	
+	    <set-payload mimeType="text/xml"
+	                 value='#[%dw 2.0
+			output application/xml
+			ns soap http://schemas.xmlsoap.org/soap/envelope/
+			ns gen http://itmo.edu/soa/genocide
+			---
+			soap#Envelope: {
+			  soap#Header: {},
+			  soap#Body: {
+			    gen#GetCityResponse: {
+			gen#city: {
+			  gen#id: payload.city.id,
+			  gen#name: payload.city.name,
+			  gen#coordinates: {
+			    gen#id: payload.city.coordinates.id,
+			    gen#x: payload.city.coordinates.x,
+			    gen#y: payload.city.coordinates.y
+			  },
+			  gen#creationDate: payload.city.creationDate,
+			  gen#area: payload.city.area,
+			  gen#population: payload.city.population,
+			  gen#metersAboveSeaLevel: payload.city.metersAboveSeaLevel,
+			  gen#establishmentDate: payload.city.establishmentDate,
+			  gen#populationDensity: payload.city.populationDensity,
+			  gen#government: payload.city.government,
+			  gen#governor:
+			    if (payload.city.governor != null)
+			      {
+			        gen#id: payload.city.governor.id,
+			        gen#age: payload.city.governor.age
+			      }
+			    else null
+			}
+			    }
+			  }
+			}
+			]'/>
+	</sub-flow>
+
+
+    <sub-flow name="getAllCities-subflow">
+        <set-variable variableName="page"
+                      value="#[output application/java --- payload.Envelope.Body.GetAllCitiesRequest.search.pagination.page default 0]" />
+        <set-variable variableName="size"
+                      value="#[output application/java --- payload.Envelope.Body.GetAllCitiesRequest.search.pagination.size default 1000]" />
+
+        <logger level="INFO" message="GetAllCities: page #[vars.page], size #[vars.size]"/>
+
+        <http:request method="POST"
+                      config-ref="Service1_Request_Config"
+                      path="/cities/search">
+            <http:body><![CDATA[#[%dw 2.0
+				output application/xml
+				---
+				{
+				    search: {
+				        pagination: {
+				            page: payload.Envelope.Body.GetAllCitiesRequest.search.pagination.page,
+				            size: payload.Envelope.Body.GetAllCitiesRequest.search.pagination.size
+				        },
+				        sort: payload.Envelope.Body.GetAllCitiesRequest.search.sort
+				    }
+				}]]]>
+			</http:body>
+        </http:request>
+
+        <logger level="INFO" message="=== REST RESPONSE (GetAllCities) ==="/>
+        <logger level="INFO" message="#[payload]"/>
+
+		<set-payload mimeType="text/xml"
+		     value='#[%dw 2.0
+			output application/xml
+			ns soap http://schemas.xmlsoap.org/soap/envelope/
+			ns gen http://itmo.edu/soa/genocide
+			---
+			soap#Envelope: {
+			  soap#Header: {},
+			  soap#Body: {
+			    gen#GetAllCitiesResponse: {
+			      gen#page: 
+			            payload.cityPageResponse.cities.*city map (c) -> {
+			              gen#cities: {
+			                gen#id: c.id,
+			                gen#name: c.name,
+			                gen#coordinates: {
+			                  gen#x: c.coordinates.x,
+			                  gen#y: c.coordinates.y
+			                },
+			                gen#creationDate: c.creationDate,
+			                gen#area: c.area,
+			                gen#population: c.population,
+			                gen#metersAboveSeaLevel: c.metersAboveSeaLevel,
+			                gen#establishmentDate: c.establishmentDate,
+			                gen#populationDensity: c.populationDensity,
+			                gen#government: c.government,
+			                gen#governor:
+			                  if (c.governor != null and c.governor.age?)
+			                    {
+			                      gen#age: c.governor.age
+			                    }
+			                  else null
+			              }
+			        }
+			    }
+			  }
+			}
+			]'/>
+    </sub-flow>
+
+    <sub-flow name="updateCity-subflow">
+        <set-variable variableName="cityId"
+                      value="#[output application/java --- payload.Envelope.Body.UpdateCityRequest.city.id default 0]" />
+        <logger level="INFO" message="Update cityId = #[vars.cityId]"/>
+
+        <http:request method="PUT"
+                      config-ref="Service1_Request_Config"
+                      path="#['/cities/' ++ vars.cityId]"
+                      sendBodyMode="ALWAYS">
+            <http:body><![CDATA[#[%dw 2.0
+				output application/xml
+				---
+				city: {
+				    id: payload.Envelope.Body.UpdateCityRequest.city.id,
+				    name: payload.Envelope.Body.UpdateCityRequest.city.name,
+				    coordinates: {
+				        x: payload.Envelope.Body.UpdateCityRequest.city.coordinates.x,
+				        y: payload.Envelope.Body.UpdateCityRequest.city.coordinates.y
+				    },
+				    creationDate: payload.Envelope.Body.UpdateCityRequest.city.creationDate,
+				    area: payload.Envelope.Body.UpdateCityRequest.city.area,
+				    population: payload.Envelope.Body.UpdateCityRequest.city.population,
+				    metersAboveSeaLevel: payload.Envelope.Body.UpdateCityRequest.city.metersAboveSeaLevel default null,
+				    establishmentDate: payload.Envelope.Body.UpdateCityRequest.city.establishmentDate,
+				    populationDensity: payload.Envelope.Body.UpdateCityRequest.city.populationDensity default null,
+				    government: payload.Envelope.Body.UpdateCityRequest.city.government default null,
+				    governor: if (payload.Envelope.Body.UpdateCityRequest.city.governor != null) 
+				                 ( { age: payload.Envelope.Body.UpdateCityRequest.city.governor.age } ) 
+				              else null
+				}]]]>
+			</http:body>
+            <http:headers>#[{'Content-Type': 'application/xml; charset=UTF-8'}]</http:headers>
+        </http:request>
+
+        <logger level="INFO" message="=== REST RESPONSE (UpdateCity) ==="/>
+        <logger level="INFO" message="#[payload]"/>
+
+        <set-variable variableName="restResponse" value="#[payload]"/>
+
+        <set-payload mimeType="text/xml"
+             value='#[%dw 2.0
+				output application/xml
+				ns soap http://schemas.xmlsoap.org/soap/envelope/
+				ns gen http://itmo.edu/soa/genocide
+				---
+				soap#Envelope: {
+				  soap#Header: {},
+				  soap#Body: {
+				    gen#UpdateCityResponse: {
+				      gen#city: {
+				        gen#id: vars.restResponse.city.id,
+				        gen#name: vars.restResponse.city.name,
+				        gen#coordinates: {
+				          gen#id: vars.restResponse.city.coordinates.id,
+				          gen#x: vars.restResponse.city.coordinates.x,
+				          gen#y: vars.restResponse.city.coordinates.y
+				        },
+				        gen#creationDate: vars.restResponse.city.creationDate,
+				        gen#area: vars.restResponse.city.area,
+				        gen#population: vars.restResponse.city.population,
+				        gen#metersAboveSeaLevel: vars.restResponse.city.metersAboveSeaLevel,
+				        gen#establishmentDate: vars.restResponse.city.establishmentDate,
+				        gen#populationDensity: vars.restResponse.city.populationDensity,
+				        gen#government: vars.restResponse.city.government,
+				        gen#governor:
+				          if (vars.restResponse.city.governor != null and vars.restResponse.city.governor.id? and vars.restResponse.city.governor.age?)
+				            {
+				              gen#id: vars.restResponse.city.governor.id,
+				              gen#age: vars.restResponse.city.governor.age
+				            }
+				          else null
+				      }
+				    }
+				  }
+				}
+				]'/>
+    </sub-flow>
+</mule>

@@ -13,7 +13,7 @@ import java.util.List;
 @Endpoint
 public class GenocideEndpoint {
 
-    private static final String NS = "http://itmo.edu/soa/genocide";
+    private static final String NAMESPACE_URI = "http://itmo.edu/soa/genocide";
 
     private final CityServiceClient cityServiceClient;
 
@@ -21,21 +21,19 @@ public class GenocideEndpoint {
         this.cityServiceClient = cityServiceClient;
     }
 
-    @PayloadRoot(namespace = NS, localPart = "GetCityRequest")
+    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "GetCityRequest")
     @ResponsePayload
     public GetCityResponse getCity(@RequestPayload GetCityRequest request) {
-
         City city = cityServiceClient.getCity(request.getId());
 
         GetCityResponse response = new GetCityResponse();
-        response.setCity(mapCity(city));
+        response.setCity(city);
         return response;
     }
 
-    @PayloadRoot(namespace = NS, localPart = "CountPopulationRequest")
+    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "CountPopulationRequest")
     @ResponsePayload
     public CountPopulationResponse count(@RequestPayload CountPopulationRequest request) {
-
         City c1 = cityServiceClient.getCity(request.getId1());
         City c2 = cityServiceClient.getCity(request.getId2());
         City c3 = cityServiceClient.getCity(request.getId3());
@@ -47,37 +45,27 @@ public class GenocideEndpoint {
         return response;
     }
 
-    @PayloadRoot(namespace = NS, localPart = "MoveToPoorestRequest")
+    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "MoveToPoorestRequest")
     @ResponsePayload
     public MoveToPoorestResponse move(@RequestPayload MoveToPoorestRequest request) {
-
         City source = cityServiceClient.getCity(request.getSourceCityId());
         List<City> cities = cityServiceClient.getAllCities();
 
         City poorest = cities.stream()
                 .filter(c -> c.getId() != source.getId())
                 .min(Comparator.comparingDouble(City::getPopulationDensity))
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("No poorest city found"));
 
         poorest.setPopulation(poorest.getPopulation() + source.getPopulation());
-        source.setPopulation(0);
+        source.setPopulation(0L);
 
+        // Обновляем через SOAP → Mule
         cityServiceClient.updateCity(poorest);
         cityServiceClient.updateCity(source);
 
         MoveToPoorestResponse response = new MoveToPoorestResponse();
-        response.setSourceCity(mapCity(source));
-        response.setTargetCity(mapCity(poorest));
+        response.setSourceCity(source);
+        response.setTargetCity(poorest);
         return response;
     }
-
-    private City mapCity(City city) {
-        City soapCity = new City();
-        soapCity.setId(city.getId());
-        soapCity.setName(city.getName());
-        soapCity.setPopulation(city.getPopulation());
-        soapCity.setPopulationDensity(city.getPopulationDensity());
-        return soapCity;
-    }
 }
-

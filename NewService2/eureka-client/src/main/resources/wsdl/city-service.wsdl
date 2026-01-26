@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:tns="http://itmo.edu/soa/genocide"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://itmo.edu/soa/genocide">
+
+    <!-- ===================== TYPES ===================== -->
+    <wsdl:types>
+        <xs:schema 
+            targetNamespace="http://itmo.edu/soa/genocide"
+            elementFormDefault="qualified">
+
+            <!-- Все типы здесь остаются без изменений -->
+            <xs:simpleType name="Government">
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="DIARCHY"/>
+                    <xs:enumeration value="KRITARCHY"/>
+                    <xs:enumeration value="REPUBLIC"/>
+                </xs:restriction>
+            </xs:simpleType>
+
+            <xs:complexType name="Human">
+                <xs:sequence>
+                    <xs:element name="age" type="xs:int"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:complexType name="Coordinates">
+                <xs:sequence>
+                    <xs:element name="x" type="xs:double"/>
+                    <xs:element name="y" type="xs:int"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:complexType name="City">
+                <xs:sequence>
+                    <xs:element name="id" type="xs:int"/>
+                    <xs:element name="name" type="xs:string"/>
+                    <xs:element name="coordinates" type="tns:Coordinates"/>
+                    <xs:element name="creationDate" type="xs:dateTime"/>
+                    <xs:element name="area" type="xs:long" minOccurs="0"/>
+                    <xs:element name="population" type="xs:long"/>
+                    <xs:element name="metersAboveSeaLevel" type="xs:long" minOccurs="0"/>
+                    <xs:element name="establishmentDate" type="xs:dateTime"/>
+                    <xs:element name="populationDensity" type="xs:float" minOccurs="0"/>
+                    <xs:element name="government" type="tns:Government" minOccurs="0"/>
+                    <xs:element name="governor" type="tns:Human" minOccurs="0"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <!-- Запросы/ответы остаются те же -->
+            <xs:element name="GetCityRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="id" type="xs:int"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="GetCityResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="city" type="tns:City"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="UpdateCityRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="city" type="tns:City"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="UpdateCityResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="city" type="tns:City"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:complexType name="Pagination">
+                <xs:sequence>
+                    <xs:element name="page" type="xs:int"/>
+                    <xs:element name="size" type="xs:int"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:complexType name="Sort">
+                <xs:sequence>
+                    <xs:element name="field" type="xs:string"/>
+                    <xs:element name="direction" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:complexType name="CitySearchRequest">
+                <xs:sequence>
+                    <xs:element name="pagination" type="tns:Pagination" minOccurs="0"/>
+                    <xs:element name="sort" type="tns:Sort" minOccurs="0"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:element name="GetAllCitiesRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="search" type="tns:CitySearchRequest" minOccurs="0"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:complexType name="CityPageResponse">
+                <xs:sequence>
+                    <xs:element name="cities" type="tns:City" minOccurs="0" maxOccurs="unbounded"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:element name="GetAllCitiesResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="page" type="tns:CityPageResponse"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+        </xs:schema>
+    </wsdl:types>
+
+    <!-- MESSAGES, PORTTYPE, BINDING, SERVICE — без изменений -->
+    <wsdl:message name="GetCityRequestMsg">
+        <wsdl:part name="parameters" element="tns:GetCityRequest"/>
+    </wsdl:message>
+    <wsdl:message name="GetCityResponseMsg">
+        <wsdl:part name="parameters" element="tns:GetCityResponse"/>
+    </wsdl:message>
+
+    <wsdl:message name="UpdateCityRequestMsg">
+        <wsdl:part name="parameters" element="tns:UpdateCityRequest"/>
+    </wsdl:message>
+    <wsdl:message name="UpdateCityResponseMsg">
+        <wsdl:part name="parameters" element="tns:UpdateCityResponse"/>
+    </wsdl:message>
+
+    <wsdl:message name="GetAllCitiesRequestMsg">
+        <wsdl:part name="parameters" element="tns:GetAllCitiesRequest"/>
+    </wsdl:message>
+    <wsdl:message name="GetAllCitiesResponseMsg">
+        <wsdl:part name="parameters" element="tns:GetAllCitiesResponse"/>
+    </wsdl:message>
+
+    <wsdl:portType name="CityServicePortType">
+        <wsdl:operation name="getCity">
+            <wsdl:input message="tns:GetCityRequestMsg"/>
+            <wsdl:output message="tns:GetCityResponseMsg"/>
+        </wsdl:operation>
+
+        <wsdl:operation name="updateCity">
+            <wsdl:input message="tns:UpdateCityRequestMsg"/>
+            <wsdl:output message="tns:UpdateCityResponseMsg"/>
+        </wsdl:operation>
+
+        <wsdl:operation name="getAllCities">
+            <wsdl:input message="tns:GetAllCitiesRequestMsg"/>
+            <wsdl:output message="tns:GetAllCitiesResponseMsg"/>
+        </wsdl:operation>
+    </wsdl:portType>
+
+    <wsdl:binding name="CityServiceBinding" type="tns:CityServicePortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+        <wsdl:operation name="getCity">
+            <soap:operation soapAction="http://itmo.edu/soa/genocide/getCity"/>
+            <wsdl:input><soap:body use="literal"/></wsdl:input>
+            <wsdl:output><soap:body use="literal"/></wsdl:output>
+        </wsdl:operation>
+
+        <wsdl:operation name="updateCity">
+            <soap:operation soapAction="http://itmo.edu/soa/genocide/updateCity"/>
+            <wsdl:input><soap:body use="literal"/></wsdl:input>
+            <wsdl:output><soap:body use="literal"/></wsdl:output>
+        </wsdl:operation>
+
+        <wsdl:operation name="getAllCities">
+            <soap:operation soapAction="http://itmo.edu/soa/genocide/getAllCities"/>
+            <wsdl:input><soap:body use="literal"/></wsdl:input>
+            <wsdl:output><soap:body use="literal"/></wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+
+    <wsdl:service name="CityService">
+        <wsdl:port name="CityServicePort" binding="tns:CityServiceBinding">
+            <soap:address location="http://localhost:8081/soap-integration"/>
+        </wsdl:port>
+    </wsdl:service>
+
+</wsdl:definitions>

@@ -16,7 +16,7 @@ public class EurekaHeartbeat {
 
     private static final Logger LOG = LoggerFactory.getLogger(EurekaHeartbeat.class);
 
-    private static final String EUREKA_URL = "http://localhost:8761/eureka/apps/SERVICE1-CLIENT/service1-client";
+    private static final String EUREKA_URL = "http://localhost:8761/eureka/apps/SERVICE1/service1";
 
     private final HttpClient client = HttpClient.newHttpClient();
 

@@ -3,7 +3,6 @@ package edu.itmo.soa.service1.config;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -15,8 +14,8 @@ public class EurekaRegister {
 
     private static final Logger log = Logger.getLogger("EurekaRegister");
 
-    private static final String EUREKA_SERVER = "http://localhost:8761/eureka/apps/SERVICE1-CLIENT";
-    private static final String SERVICE_ID = "service1-client";
+    private static final String EUREKA_SERVER = "http://localhost:8761/eureka/apps/SERVICE1";
+    private static final String SERVICE_ID = "service1";
     private static final int SERVICE_PORT = 8545;
 
     @PostConstruct
@@ -41,7 +40,7 @@ public class EurekaRegister {
     private String buildBody() {
         try {
             String hostAddress = "10.130.0.21";
-            int wildFlyPort = 8081;
+            int wildFlyPort = 8050;
 
             return String.format("""
         {

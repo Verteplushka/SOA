@@ -1,5 +1,6 @@
 import { governmentMap } from "../utils/government-localizator";
 import { formatDate } from "../utils/date-localizator";
+import { deleteCity } from "../api/api-service1";
 
 export default function CityRow({ city, onDelete, onEdit }) {
   return (
@@ -24,7 +25,10 @@ export default function CityRow({ city, onDelete, onEdit }) {
         </button>
         <button
           className="btn btn-sm btn-danger"
-          onClick={() => onDelete(city)}
+          onClick={() => {
+            deleteCity(city.id);
+            window.location.href = "/";
+          }}
         >
           Удалить
         </button>

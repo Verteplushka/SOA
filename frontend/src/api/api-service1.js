@@ -2,7 +2,8 @@ import axios from "axios";
 import { XMLParser, XMLBuilder } from "fast-xml-parser";
 
 const BASE_URL =
-  import.meta.env.VITE_API_BASE || "https://158.160.140.50:8545/Service1";
+  import.meta.env.VITE_API_BASE ||
+  "https://158.160.140.50:8766/service1/Service1";
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -51,6 +52,17 @@ export async function addCity(cityInput) {
 
 export async function getCity(id) {
   const res = await axiosInstance.get(`/cities/${id}`);
+  return parseXml(res.data);
+}
+
+export async function updateCity(cityInput, id) {
+  const xml = toXml(cityInput, "CityInput");
+  const res = await axiosInstance.put(`/cities/${id}`, xml);
+  return parseXml(res.data);
+}
+
+export async function deleteCity(id) {
+  const res = await axiosInstance.delete(`/cities/${id}`);
   return parseXml(res.data);
 }
 
