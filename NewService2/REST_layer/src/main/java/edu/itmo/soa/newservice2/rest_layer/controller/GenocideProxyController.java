@@ -9,7 +9,6 @@ import org.springframework.ws.client.core.WebServiceTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ws.soap.SoapMessage;
-import javax.xml.datatype.XMLGregorianCalendar;
 
 
 @RestController
