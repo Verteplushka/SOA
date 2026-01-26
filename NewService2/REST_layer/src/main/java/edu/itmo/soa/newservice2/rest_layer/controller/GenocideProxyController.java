@@ -59,9 +59,9 @@ public class GenocideProxyController {
 
         } catch (Exception e) {
             log.error("Error calling SOAP countPopulation", e);
-            return ResponseEntity.status(500)
+            return ResponseEntity.status(404)
                     .contentType(MediaType.APPLICATION_XML)
-                    .body("<error>SOAP call failed: " + e.getMessage() + "</error>");
+                    .body("<error>Один или несколько городов не найдены</error>");
         }
     }
 
@@ -94,9 +94,9 @@ public class GenocideProxyController {
 
         } catch (Exception e) {
             log.error("Error calling SOAP moveToPoorest", e);
-            return ResponseEntity.status(500)
+            return ResponseEntity.status(404)
                     .contentType(MediaType.APPLICATION_XML)
-                    .body("<error>SOAP call failed: " + e.getMessage() + "</error>");
+                    .body("<error>Указанный город не найден</error>");
         }
     }
 

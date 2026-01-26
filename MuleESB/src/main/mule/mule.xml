@@ -160,9 +160,9 @@
 			  soap#Header: {},
 			  soap#Body: {
 			    gen#GetAllCitiesResponse: {
-			      gen#page: 
+			      gen#page: {
+			      gen#cities:
 			            payload.cityPageResponse.cities.*city map (c) -> {
-			              gen#cities: {
 			                gen#id: c.id,
 			                gen#name: c.name,
 			                gen#coordinates: {

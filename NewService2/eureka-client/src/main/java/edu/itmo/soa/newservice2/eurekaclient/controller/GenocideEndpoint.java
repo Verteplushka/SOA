@@ -59,7 +59,6 @@ public class GenocideEndpoint {
         poorest.setPopulation(poorest.getPopulation() + source.getPopulation());
         source.setPopulation(0L);
 
-        // Обновляем через SOAP → Mule
         cityServiceClient.updateCity(poorest);
         cityServiceClient.updateCity(source);
 

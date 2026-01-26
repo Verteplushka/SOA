@@ -6,7 +6,7 @@ function parseErrorMessage(xmlString) {
   try {
     const parser = new DOMParser();
     const xml = parser.parseFromString(xmlString, "text/xml");
-    const messageNode = xml.getElementsByTagName("message")[0];
+    const messageNode = xml.getElementsByTagName("error")[0];
     if (messageNode) return messageNode.textContent;
   } catch (e) {
     console.error("Ошибка парсинга XML:", e);
