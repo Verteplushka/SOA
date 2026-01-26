@@ -188,7 +188,7 @@
 
     <wsdl:service name="CityService">
         <wsdl:port name="CityServicePort" binding="tns:CityServiceBinding">
-            <soap:address location="http://localhost:8081/soap-integration"/>
+            <soap:address location="http://158.160.138.235:8081/soap-integration"/>
         </wsdl:port>
     </wsdl:service>
 
