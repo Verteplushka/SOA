@@ -1,0 +1,404 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { addCity, getCity, toXml, updateCity } from "../api/api-service1";
+import {
+  governmentOptions,
+  getGovernmentKey,
+} from "../utils/government-localizator";
+
+const MAX_DATE = new Date().toISOString().split("T")[0];
+const MAX_INT_LENGTH = 9;
+const MAX_DOUBLE_INT = 10;
+const MAX_DOUBLE_DEC = 10;
+const MAX_NAME_LENGTH = 100;
+const MAX_COORD_X = 220;
+
+function CityForm({ existingCity }) {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [city, setCity] = useState({
+    name: "",
+    coordinates: { x: "0", y: "0" },
+    area: "0",
+    population: "0",
+    metersAboveSeaLevel: "0",
+    establishmentDate: "",
+    populationDensity: "0",
+    government: governmentOptions[0],
+    governor: { age: "0" },
+  });
+
+  const editUrl = existingCity?._links?.update;
+  const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState({});
+
+  const parseEstablishmentDate = (value) => {
+    if (!value) return "";
+
+    if (typeof value === "string") {
+      const datePart = value.split("T")[0];
+      return datePart;
+    }
+
+    return "";
+  };
+
+  useEffect(() => {
+    if (id) {
+      getCity(id)
+        .then((res) => {
+          const data = res.city;
+          console.log("DATA:", data);
+          setCity({
+            name: data.name,
+            coordinates: {
+              x: data.coordinates.x,
+              y: data.coordinates.y,
+            },
+            area: data.area,
+            population: data.population,
+            metersAboveSeaLevel: data.metersAboveSeaLevel || 0,
+            establishmentDate: parseEstablishmentDate(data.establishmentDate),
+            populationDensity: data.populationDensity || 0,
+            government: data.government,
+            governor: { age: data.governor.age || 0 },
+          });
+        })
+        .catch((e) => {
+          console.error(e);
+          setError("Не удалось загрузить данные города");
+        });
+    }
+  }, [id]);
+
+  const validateField = (name, value) => {
+    let err = "";
+    const isInt = (val) => /^-?\d+$/.test(val);
+    const isFloat = (val) => /^-?\d*(\.\d*)?$/.test(val);
+
+    switch (name) {
+      case "name":
+        if (!value.trim()) err = "Название не может быть пустым";
+        else if (value.length > MAX_NAME_LENGTH)
+          err = `Максимальная длина — ${MAX_NAME_LENGTH} символов`;
+        break;
+
+      case "coordinates.x":
+      case "coordinates.y":
+      case "populationDensity":
+        if (!isFloat(value)) {
+          err = "Введите корректное число";
+        } else {
+          const [intPart, decPart] = String(value).split(".");
+          if ((intPart?.replace("-", "").length || 0) > MAX_DOUBLE_INT) {
+            err = `Целая часть не более ${MAX_DOUBLE_INT} цифр`;
+          } else if ((decPart?.length || 0) > MAX_DOUBLE_DEC) {
+            err = `Дробная часть не более ${MAX_DOUBLE_DEC} цифр`;
+          } else if (name === "coordinates.x" && Number(value) > MAX_COORD_X) {
+            err = `Координата X не может быть больше ${MAX_COORD_X}`;
+          } else if (Number(value) <= 0 && name === "populationDensity") {
+            err = "Плотность населения должна быть положительной";
+          }
+        }
+        break;
+
+      case "area":
+      case "population":
+      case "metersAboveSeaLevel":
+      case "governor.age":
+        if (!isInt(value)) err = "Введите целое число";
+        else if (value.length > MAX_INT_LENGTH)
+          err = `Максимум ${MAX_INT_LENGTH} цифр`;
+        else if (
+          (name === "area" || name === "population") &&
+          Number(value) <= 0
+        )
+          err = `${
+            name === "area" ? "Площадь" : "Население"
+          } должно быть положительным`;
+        else if (
+          name === "governor.age" &&
+          (Number(value) < 18 || Number(value) >= 99)
+        )
+          err = "Возраст должен быть от 18 до 99";
+        break;
+
+      case "establishmentDate":
+        if (value && value > MAX_DATE)
+          err = "Дата основания не может быть в будущем";
+        break;
+
+      default:
+        break;
+    }
+
+    setValidationErrors((prev) => ({ ...prev, [name]: err }));
+    return err === "";
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name.includes("coordinates.")) {
+      const key = name.split(".")[1];
+      setCity((prev) => ({
+        ...prev,
+        coordinates: { ...prev.coordinates, [key]: value },
+      }));
+    } else if (name.includes("governor.")) {
+      const key = name.split(".")[1];
+      setCity((prev) => ({
+        ...prev,
+        governor: { ...prev.governor, [key]: value },
+      }));
+    } else {
+      setCity((prev) => ({ ...prev, [name]: value }));
+    }
+    validateField(name, value);
+  };
+
+  const handleNumericKeyDown = (e, isFloatField = false) => {
+    const allowedKeys = [
+      "Backspace",
+      "Delete",
+      "ArrowLeft",
+      "ArrowRight",
+      "Tab",
+    ];
+    if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+      if (
+        !(
+          isFloatField &&
+          (e.key === "." || (e.key === "-" && e.target.selectionStart === 0))
+        )
+      ) {
+        e.preventDefault();
+      }
+    }
+    if (isFloatField && e.key === "." && e.target.value.includes("."))
+      e.preventDefault();
+    if (isFloatField && e.key === "-" && e.target.selectionStart !== 0)
+      e.preventDefault();
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    const fields = [
+      "name",
+      "coordinates.x",
+      "coordinates.y",
+      "area",
+      "population",
+      "metersAboveSeaLevel",
+      "populationDensity",
+      "governor.age",
+      "establishmentDate",
+    ];
+    const allValid = fields.every((f) =>
+      validateField(f, f.includes(".") ? eval(`city.${f}`) : city[f])
+    );
+
+    if (!allValid) {
+      setError("Исправьте ошибки перед сохранением");
+      return;
+    }
+
+    const formatLocalDateTime = (d) => {
+      if (!d) return null;
+      const [year, month, day] = d.split("-");
+      return `${year}-${month}-${day}T00:00:00`;
+    };
+
+    const cityToSend = {
+      ...city,
+      coordinates: {
+        x: Number(city.coordinates.x),
+        y: Number(city.coordinates.y),
+      },
+      area: Number(city.area),
+      population: Number(city.population),
+      metersAboveSeaLevel: Number(city.metersAboveSeaLevel),
+      populationDensity: Number(city.populationDensity),
+      governor: { age: Number(city.governor.age) },
+      government: getGovernmentKey(city.government),
+      establishmentDate: formatLocalDateTime(city.establishmentDate),
+    };
+
+    try {
+      if (editUrl) {
+        // await fetch(editUrl, {
+        //   method: "PUT",
+        //   headers: { "Content-Type": "application/xml" },
+        //   body: toXml(cityToSend, "CityInput"),
+        // });
+        updateCity(cityToSend, existingCity?.id);
+      } else {
+        await addCity(cityToSend);
+      }
+      navigate("/");
+    } catch (err) {
+      setError("Ошибка при сохранении города");
+      console.log(err);
+    }
+  };
+
+  return (
+    <div className="container mt-4">
+      <h2 className="mb-4">{id ? "Редактировать город" : "Создать город"}</h2>
+
+      {error && (
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <div className="row g-3">
+          <div className="col-md-6">
+            <label className="form-label">Название города</label>
+            <input
+              type="text"
+              className={`form-control ${
+                validationErrors.name ? "is-invalid" : ""
+              }`}
+              name="name"
+              value={city.name}
+              onChange={handleChange}
+              required
+            />
+            {validationErrors.name && (
+              <div className="invalid-feedback">{validationErrors.name}</div>
+            )}
+          </div>
+
+          {["x", "y"].map((axis) => (
+            <div className="col-md-3" key={axis}>
+              <label className="form-label">
+                Координата {axis.toUpperCase()}
+              </label>
+              <input
+                type="text"
+                className={`form-control ${
+                  validationErrors[`coordinates.${axis}`] ? "is-invalid" : ""
+                }`}
+                name={`coordinates.${axis}`}
+                value={city.coordinates[axis]}
+                onChange={handleChange}
+                onKeyDown={(e) => handleNumericKeyDown(e, true)}
+                required
+              />
+              {validationErrors[`coordinates.${axis}`] && (
+                <div className="invalid-feedback">
+                  {validationErrors[`coordinates.${axis}`]}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {[
+            { label: "Площадь", name: "area" },
+            { label: "Население", name: "population" },
+            { label: "Высота над уровнем моря", name: "metersAboveSeaLevel" },
+            {
+              label: "Плотность населения",
+              name: "populationDensity",
+              float: true,
+            },
+          ].map((f) => (
+            <div className="col-md-4" key={f.name}>
+              <label className="form-label">{f.label}</label>
+              <input
+                type="text"
+                className={`form-control ${
+                  validationErrors[f.name] ? "is-invalid" : ""
+                }`}
+                name={f.name}
+                value={city[f.name]}
+                onChange={handleChange}
+                onKeyDown={(e) => handleNumericKeyDown(e, !!f.float)}
+              />
+              {validationErrors[f.name] && (
+                <div className="invalid-feedback">
+                  {validationErrors[f.name]}
+                </div>
+              )}
+            </div>
+          ))}
+
+          <div className="col-md-4">
+            <label className="form-label">Дата основания</label>
+            <input
+              type="date"
+              className={`form-control ${
+                validationErrors.establishmentDate ? "is-invalid" : ""
+              }`}
+              name="establishmentDate"
+              value={city.establishmentDate}
+              onChange={handleChange}
+              max={MAX_DATE}
+            />
+            {validationErrors.establishmentDate && (
+              <div className="invalid-feedback">
+                {validationErrors.establishmentDate}
+              </div>
+            )}
+          </div>
+
+          <div className="col-md-4">
+            <label className="form-label">Форма правления</label>
+            <select
+              className="form-select"
+              name="government"
+              value={city.government}
+              onChange={handleChange}
+              required
+            >
+              {governmentOptions.map((gov) => (
+                <option key={gov} value={gov}>
+                  {gov}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-md-4">
+            <label className="form-label">Возраст губернатора</label>
+            <input
+              type="text"
+              className={`form-control ${
+                validationErrors["governor.age"] ? "is-invalid" : ""
+              }`}
+              name="governor.age"
+              value={city.governor.age}
+              onChange={handleChange}
+              onKeyDown={(e) => handleNumericKeyDown(e, false)}
+              required
+            />
+            {validationErrors["governor.age"] && (
+              <div className="invalid-feedback">
+                {validationErrors["governor.age"]}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <button type="submit" className="btn btn-primary me-2">
+            {id ? "Сохранить" : "Создать"}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => navigate("/")}
+          >
+            Отмена
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+export default CityForm;

@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="10683baf-453d-4de8-a22b-58a395bf5a06" activeEnvironment="Default" name="soa" resourceRoot="" soapui-version="5.9.1" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:WsdlInterface" id="bef91cf4-e811-45be-b0f9-7be2952ec32a" wsaVersion="NONE" name="CityServiceBinding" type="wsdl" bindingName="{http://itmo.edu/soa/genocide}CityServiceBinding" soapVersion="1_1" anonymous="optional" definition="file:/D:/ITMO/year4/midterm1/SOA/MuleESB/src/main/resources/city-service.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="file:\D:\ITMO\year4\midterm1\SOA\MuleESB\src\main\resources\city-service.wsdl"><con:part><con:url>file:\D:\ITMO\year4\midterm1\SOA\MuleESB\src\main\resources\city-service.wsdl</con:url><con:content><![CDATA[<wsdl:definitions targetNamespace="http://itmo.edu/soa/genocide" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://itmo.edu/soa/genocide" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <!--===================== TYPES =====================-->
+  <wsdl:types>
+    <xs:schema targetNamespace="http://itmo.edu/soa/genocide" elementFormDefault="qualified">
+      <!--Все типы здесь остаются без изменений-->
+      <xs:simpleType name="Government">
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="DIARCHY"/>
+          <xs:enumeration value="KRITARCHY"/>
+          <xs:enumeration value="REPUBLIC"/>
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:complexType name="Human">
+        <xs:sequence>
+          <xs:element name="age" type="xs:int"/>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="Coordinates">
+        <xs:sequence>
+          <xs:element name="x" type="xs:double"/>
+          <xs:element name="y" type="xs:int"/>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="City">
+        <xs:sequence>
+          <xs:element name="id" type="xs:int"/>
+          <xs:element name="name" type="xs:string"/>
+          <xs:element name="coordinates" type="tns:Coordinates"/>
+          <xs:element name="creationDate" type="xs:dateTime"/>
+          <xs:element name="area" type="xs:long" minOccurs="0"/>
+          <xs:element name="population" type="xs:long"/>
+          <xs:element name="metersAboveSeaLevel" type="xs:long" minOccurs="0"/>
+          <xs:element name="establishmentDate" type="xs:dateTime"/>
+          <xs:element name="populationDensity" type="xs:float" minOccurs="0"/>
+          <xs:element name="government" type="tns:Government" minOccurs="0"/>
+          <xs:element name="governor" type="tns:Human" minOccurs="0"/>
+        </xs:sequence>
+      </xs:complexType>
+      <!--Запросы/ответы остаются те же-->
+      <xs:element name="GetCityRequest">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="id" type="xs:int"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="GetCityResponse">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="city" type="tns:City"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="UpdateCityRequest">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="city" type="tns:City"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="UpdateCityResponse">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="city" type="tns:City"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:complexType name="Pagination">
+        <xs:sequence>
+          <xs:element name="page" type="xs:int"/>
+          <xs:element name="size" type="xs:int"/>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="Sort">
+        <xs:sequence>
+          <xs:element name="field" type="xs:string"/>
+          <xs:element name="direction" type="xs:string"/>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="CitySearchRequest">
+        <xs:sequence>
+          <xs:element name="pagination" type="tns:Pagination" minOccurs="0"/>
+          <xs:element name="sort" type="tns:Sort" minOccurs="0"/>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:element name="GetAllCitiesRequest">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="search" type="tns:CitySearchRequest" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:complexType name="CityPageResponse">
+        <xs:sequence>
+          <xs:element name="cities" type="tns:City" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:element name="GetAllCitiesResponse">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="page" type="tns:CityPageResponse"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:schema>
+  </wsdl:types>
+  <!--MESSAGES, PORTTYPE, BINDING, SERVICE — без изменений-->
+  <wsdl:message name="GetCityRequestMsg">
+    <wsdl:part name="parameters" element="tns:GetCityRequest"/>
+  </wsdl:message>
+  <wsdl:message name="GetCityResponseMsg">
+    <wsdl:part name="parameters" element="tns:GetCityResponse"/>
+  </wsdl:message>
+  <wsdl:message name="UpdateCityRequestMsg">
+    <wsdl:part name="parameters" element="tns:UpdateCityRequest"/>
+  </wsdl:message>
+  <wsdl:message name="UpdateCityResponseMsg">
+    <wsdl:part name="parameters" element="tns:UpdateCityResponse"/>
+  </wsdl:message>
+  <wsdl:message name="GetAllCitiesRequestMsg">
+    <wsdl:part name="parameters" element="tns:GetAllCitiesRequest"/>
+  </wsdl:message>
+  <wsdl:message name="GetAllCitiesResponseMsg">
+    <wsdl:part name="parameters" element="tns:GetAllCitiesResponse"/>
+  </wsdl:message>
+  <wsdl:portType name="CityServicePortType">
+    <wsdl:operation name="getCity">
+      <wsdl:input message="tns:GetCityRequestMsg"/>
+      <wsdl:output message="tns:GetCityResponseMsg"/>
+    </wsdl:operation>
+    <wsdl:operation name="updateCity">
+      <wsdl:input message="tns:UpdateCityRequestMsg"/>
+      <wsdl:output message="tns:UpdateCityResponseMsg"/>
+    </wsdl:operation>
+    <wsdl:operation name="getAllCities">
+      <wsdl:input message="tns:GetAllCitiesRequestMsg"/>
+      <wsdl:output message="tns:GetAllCitiesResponseMsg"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="CityServiceBinding" type="tns:CityServicePortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="getCity">
+      <soap:operation soapAction="http://itmo.edu/soa/genocide/getCity"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="updateCity">
+      <soap:operation soapAction="http://itmo.edu/soa/genocide/updateCity"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="getAllCities">
+      <soap:operation soapAction="http://itmo.edu/soa/genocide/getAllCities"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="CityService">
+    <wsdl:port name="CityServicePort" binding="tns:CityServiceBinding">
+      <soap:address location="http://localhost:8081/soap-integration"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part></con:definitionCache><con:endpoints><con:endpoint>http://localhost:8081/soap-integration</con:endpoint></con:endpoints><con:operation id="6305dca3-0c74-4edb-b510-192f472fdb11" isOneWay="false" action="http://itmo.edu/soa/genocide/getAllCities" name="getAllCities" bindingOperationName="getAllCities" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call id="603dcb4a-91ba-4a1f-a942-cb646b6f215c" name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://158.160.138.235:8081/soap-integration</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:gen="http://itmo.edu/soa/genocide">\r
+   <soapenv:Header/>\r
+   <soapenv:Body>\r
+      <gen:GetAllCitiesRequest>\r
+         <gen:search>\r
+            <gen:pagination>\r
+               <gen:page>0</gen:page>\r
+               <gen:size>1000</gen:size>\r
+            </gen:pagination>\r
+            <gen:sort>\r
+               <gen:field>populationDensity</gen:field>\r
+               <gen:direction>ASC</gen:direction>\r
+            </gen:sort>\r
+         </gen:search>\r
+      </gen:GetAllCitiesRequest>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://itmo.edu/soa/genocide/getAllCities"/><con:wsrmConfig version="1.2"/></con:call></con:operation><con:operation id="dd21a03b-ae5f-4576-961e-3768a99b5714" isOneWay="false" action="http://itmo.edu/soa/genocide/getCity" name="getCity" bindingOperationName="getCity" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call id="7e53c4c4-19c6-46d0-aa37-4a53b3b1de99" name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://158.160.138.235:8081/soap-integration</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:gen="http://itmo.edu/soa/genocide">\r
+   <soapenv:Header/>\r
+   <soapenv:Body>\r
+      <gen:GetCityRequest>\r
+         <gen:id>240</gen:id>\r
+      </gen:GetCityRequest>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://itmo.edu/soa/genocide/getCity"/><con:wsrmConfig version="1.2"/></con:call><con:call id="f9ed2036-428a-42a7-8976-8f80dd7dfee8" name="moveToPoorest"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://localhost:8080/ws</con:endpoint><con:request><![CDATA[<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" 
+               xmlns:gen="http://itmo.edu/soa/genocide">
+   <soap:Header/>
+   <soap:Body>
+      <gen:MoveToPoorestRequest>
+         <gen:sourceCityId>24</gen:sourceCityId>
+      </gen:MoveToPoorestRequest>
+   </soap:Body>
+</soap:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://itmo.edu/soa/genocide/getCity"/><con:wsrmConfig version="1.2"/></con:call><con:call id="de5299b3-f174-4e6b-9660-ed3510e27550" name="countPopulation"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://158.160.138.235:8091/ws</con:endpoint><con:request><![CDATA[<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" 
+               xmlns:gen="http://itmo.edu/soa/genocide">
+   <soap:Header/>
+   <soap:Body>
+      <gen:CountPopulationRequest>
+         <gen:id1>24</gen:id1>
+         <gen:id2>25</gen:id2>
+         <gen:id3>26</gen:id3>
+      </gen:CountPopulationRequest>
+   </soap:Body>
+</soap:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://itmo.edu/soa/genocide/getCity"/><con:wsrmConfig version="1.2"/></con:call></con:operation><con:operation id="2469a378-fd5f-463c-b5af-edde547c3fc2" isOneWay="false" action="http://itmo.edu/soa/genocide/updateCity" name="updateCity" bindingOperationName="updateCity" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call id="0c29a5c8-64d0-471a-b6dd-508ca2bb179e" name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://localhost:8081/soap-integration</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:gen="http://itmo.edu/soa/genocide">\r
+   <soapenv:Header/>\r
+   <soapenv:Body>\r
+      <gen:UpdateCityRequest>\r
+         <gen:city>\r
+            <gen:id>24</gen:id>\r
+            <gen:name>Chelyabinsk</gen:name>\r
+            <gen:coordinates>\r
+               <gen:x>100</gen:x>\r
+               <gen:y>23</gen:y>\r
+            </gen:coordinates>\r
+            <gen:creationDate>2025-11-21T08:52:28.319Z</gen:creationDate>\r
+            <!--Optional:-->\r
+            <gen:area>837492</gen:area>\r
+            <gen:population>2837</gen:population>\r
+            <!--Optional:-->\r
+            <gen:metersAboveSeaLevel>987</gen:metersAboveSeaLevel>\r
+            <gen:establishmentDate>1987-06-08T00:00:00</gen:establishmentDate>\r
+            <!--Optional:-->\r
+            <gen:populationDensity>3851.0</gen:populationDensity>\r
+            <!--Optional:-->\r
+            <gen:government>REPUBLIC</gen:government>\r
+            <!--Optional:-->\r
+            <gen:governor>\r
+               <gen:age>98</gen:age>\r
+            </gen:governor>\r
+         </gen:city>\r
+      </gen:UpdateCityRequest>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://itmo.edu/soa/genocide/updateCity"/><con:wsrmConfig version="1.2"/></con:call></con:operation></con:interface><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/></con:soapui-project>

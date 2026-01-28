@@ -6,6 +6,10 @@ info:
 servers:
   - url: http://localhost:8080
     description: Локальный сервер разработки
+  - url: https://158.160.204.193:8443/Service1
+    description: Развернутый сервер 1
+  - url: https://158.160.204.193:8544/demo-1.0-SNAPSHOT
+    description: Развернуый сервер 2
 
 paths:
   /cities/search:
@@ -211,9 +215,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/City"
+                  allOf:
+                    - $ref: "#/components/schemas/City"
+                  xml:
+                    name: city
                 xml:
                   name: cities
+                  wrapped: true
         "400":
           description: Неверный параметр age
           content:
